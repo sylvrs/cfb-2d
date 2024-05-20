@@ -42,26 +42,18 @@ pub fn main() anyerror!void {
         defer rl.endDrawing();
         rl.clearBackground(Color.black);
 
-        // set the player's zoom & field's scale based on the size of the window
-        const new_scale: f32 = @floatFromInt(@divFloor(
-            rl.getScreenWidth(),
-            rl.getScreenHeight(),
-        ));
-        if (new_scale != field.scale) {
-            player.setZoom(new_scale);
-            field.setScale(new_scale);
-        }
-
         // update the player
         player.update();
-        // try utils.fmtTrace(.log_info, 48, "Player: (x: {d}, y: {d})", .{ player.position.x, player.position.y });
 
         // draw the field and player
-        player.startCamera();
-        defer player.endCamera();
+        {
+            // used to properly zoom in and target the player
+            player.startCamera();
+            defer player.endCamera();
 
-        field.draw();
-        player.draw();
+            field.draw();
+            player.draw();
+        }
     }
 }
 

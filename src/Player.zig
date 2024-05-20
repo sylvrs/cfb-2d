@@ -1,8 +1,13 @@
 const rl = @import("raylib");
 const rlm = @import("raylib-math");
+const utils = @import("utils.zig");
 
 const Self = @This();
 const CameraSmoothing = 0.15;
+
+const BaseSpeed = 3.5;
+const MaxSpeed = BaseSpeed * 2;
+const Acceleration = 0.5;
 
 /// The camera following the player.
 camera: rl.Camera2D,
@@ -34,16 +39,23 @@ pub fn init(position: rl.Vector2, zoom: f32) Self {
 
 /// Updates the player.
 pub fn update(self: *Self) void {
-    if (rl.isKeyDown(.key_w)) {
+    // update the player's speed based on input
+    self.speed = if (rl.isKeyDown(.key_left_shift) or rl.isGamepadButtonDown(0, .gamepad_button_right_trigger_2))
+        rlm.lerp(self.speed, MaxSpeed, Acceleration)
+    else
+        rlm.lerp(self.speed, BaseSpeed, Acceleration);
+
+    // move the player based on input
+    if (rl.isKeyDown(.key_w) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_up)) {
         self.position.y -= self.speed;
     }
-    if (rl.isKeyDown(.key_s)) {
+    if (rl.isKeyDown(.key_s) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_down)) {
         self.position.y += self.speed;
     }
-    if (rl.isKeyDown(.key_a)) {
+    if (rl.isKeyDown(.key_a) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_left)) {
         self.position.x -= self.speed;
     }
-    if (rl.isKeyDown(.key_d)) {
+    if (rl.isKeyDown(.key_d) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_right)) {
         self.position.x += self.speed;
     }
 
@@ -67,6 +79,7 @@ pub fn endCamera(self: *Self) void {
 }
 
 pub fn draw(self: *Self) void {
+    // interpolate the camera target towards the player's position
     self.camera.target = rlm.vector2Lerp(self.camera.target, self.position, CameraSmoothing);
 
     // limit the camera target to the bounds of the screen
