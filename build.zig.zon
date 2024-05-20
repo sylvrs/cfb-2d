@@ -1,0 +1,16 @@
+.{
+    .name = "iguaball",
+
+    .version = "0.0.0",
+
+    .dependencies = .{
+        .@"raylib-zig" = .{
+            .url = "https://github.com/Not-Nik/raylib-zig/archive/devel.tar.gz",
+            .hash = "1220fa78e6bd9eae16393b1d842ba653445e7863589c39874ff1e1e9a3ff2b78e53b",
+        },
+    },
+
+    .paths = .{
+        "",
+    },
+}
