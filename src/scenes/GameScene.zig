@@ -27,12 +27,34 @@ pub fn deinit(erased_self: *anyopaque) void {
 /// Updates the game scene.
 pub fn update(erased_self: *anyopaque) !void {
     const self = utils.alignAndCast(Self, erased_self);
+    self.field.update();
     self.player.update();
 }
 
 /// Draws the game scene.
 pub fn draw(erased_self: *anyopaque) !void {
     const self = utils.alignAndCast(Self, erased_self);
+
+    self.drawNonHudElements();
+    try self.drawHud();
+}
+
+/// Draws the HUD elements of the game scene.
+pub fn drawHud(self: *Self) !void {
+    try utils.drawFmtTextWithBackground(
+        10,
+        10,
+        24,
+        rl.Color.white,
+        rl.Color.black,
+        48,
+        "pos: (x: {d:2}, y: {d:2})",
+        .{ self.player.position.x, self.player.position.y },
+    );
+}
+
+/// Draws the non-HUD elements of the game scene.
+pub fn drawNonHudElements(self: *Self) void {
     self.player.startCamera();
     defer self.player.endCamera();
 

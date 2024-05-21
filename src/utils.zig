@@ -50,6 +50,21 @@ pub fn drawCenteredText(text: [:0]const u8, x: i32, y: i32, font_size: i32, text
     rl.drawText(text, text_x, text_y, font_size, text_color);
 }
 
+/// Draws text centered at the specified position.
+pub fn drawCenteredTextPro(font: rl.Font, text: [:0]const u8, position: rl.Vector2, origin: rl.Vector2, rotation: f32, font_size: f32, spacing: f32, text_color: rl.Color) void {
+    const text_bounds = rl.measureTextEx(font, text, font_size, spacing);
+    rl.drawTextPro(
+        font,
+        text,
+        position,
+        rl.Vector2.init(origin.x + text_bounds.x / 2, origin.y + text_bounds.y / 2),
+        rotation,
+        font_size,
+        spacing,
+        text_color,
+    );
+}
+
 /// Draws a texture at the specified position with the specified scale.
 pub fn drawScaledTexture(texture: rl.Texture2D, pos_x: f32, pos_y: f32, scale: f32, tint: rl.Color) void {
     rl.drawTexturePro(
