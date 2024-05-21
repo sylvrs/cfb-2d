@@ -37,6 +37,12 @@ pub fn init(position: rl.Vector2, zoom: f32) Self {
     };
 }
 
+/// Deinitializes the player.
+pub fn deinit(self: *Self) void {
+    _ = self;
+    // TODO: unload the textures once we load them
+}
+
 /// Updates the player.
 pub fn update(self: *Self) void {
     // update the player's speed based on input

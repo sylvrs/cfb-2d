@@ -5,73 +5,29 @@ const Color = rl.Color;
 const Field = @import("Field.zig");
 const Player = @import("Player.zig");
 const utils = @import("utils.zig");
+const Scene = @import("Scene.zig");
 
-const Scale = 2;
-/// The starting width of the window (predefined as the size of the field by the scale factor)
-const ScreenWidth = 720 * Scale;
-/// The starting height of the window. (predefined as the size of the field by the scale factor)
-const ScreenHeight = 320 * Scale;
-/// The title of the window.
-const Title = "College Ball";
-/// The period, in seconds, between each update of the window title.
-const TitleUpdatePeriod = 3.0 / 4.0;
-
-const ShouldFullscreen = false;
+/// The game state, which holds the current scene and the task that updates the window title.
+const GameState = @import("GameState.zig");
 
 pub fn main() anyerror!void {
+    const allocator = std.heap.page_allocator;
     rl.setConfigFlags(.flag_vsync_hint);
-    rl.initWindow(ScreenWidth, ScreenHeight, Title);
+    rl.setExitKey(.key_null);
+    rl.initWindow(GameState.ScreenWidth, GameState.ScreenHeight, GameState.Title);
     defer rl.closeWindow();
     rl.setWindowState(.flag_window_resizable);
 
-    var title_task = Task{
-        .period = 1.0 / 2.0,
-        .task = struct {
-            pub fn run() anyerror!void {
-                try utils.setFmtWindowTitle(32, "{s} [FPS: {d}]", .{ Title, rl.getFPS() });
-            }
-        }.run,
-    };
+    var state = GameState.init(allocator);
+    defer state.deinit();
+    try state.setup();
 
-    var field = Field.init(Scale);
-    var player = Player.init(.{ .x = ScreenWidth / 2, .y = ScreenHeight / 2 }, Scale);
     while (!rl.windowShouldClose()) {
-        try title_task.tick();
-
         rl.beginDrawing();
         defer rl.endDrawing();
         rl.clearBackground(Color.black);
 
-        // update the player
-        player.update();
-
-        // draw the field and player
-        {
-            // used to properly zoom in and target the player
-            player.startCamera();
-            defer player.endCamera();
-
-            field.draw();
-            player.draw();
-        }
+        try state.update();
+        try state.draw();
     }
 }
-
-const Task = struct {
-    /// The period, in seconds, between each run of the task.
-    period: f32,
-    /// An internal counter to keep track of the last time the task was run.
-    last_run: f64 = 0,
-    /// A constant function pointer to the task to run.
-    task: *const fn () anyerror!void,
-
-    /// Ticks the task, running it if the period has elapsed & updating the last run time.
-    pub fn tick(self: *Task) anyerror!void {
-        const now = rl.getTime();
-
-        if (now - self.last_run >= self.period) {
-            self.last_run = now;
-            try (self.task)();
-        }
-    }
-};

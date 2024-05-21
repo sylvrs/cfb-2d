@@ -41,12 +41,13 @@ pub fn drawFmtTextWithBackground(x: i32, y: i32, font_size: i32, text_color: rl.
     rl.drawText(text, x, y, font_size, text_color);
 }
 
-/// Draws text with a background rectangle.
-pub fn drawTextWithBackground(text: []const u8, x: i32, y: i32, font_size: i32, text_color: rl.Color, bg_color: rl.Color) void {
+/// Draws text centered at the specified position.
+pub fn drawCenteredText(text: [:0]const u8, x: i32, y: i32, font_size: i32, text_color: rl.Color) void {
     const text_size = rl.measureText(text, font_size);
+    const text_x = x - @divFloor(text_size, 2);
+    const text_y = y - @divFloor(font_size, 2);
 
-    rl.drawRectangle(x, y, text_size, font_size, bg_color);
-    rl.drawText(text, x, y, font_size, text_color);
+    rl.drawText(text, text_x, text_y, font_size, text_color);
 }
 
 /// Draws a texture at the specified position with the specified scale.
@@ -63,4 +64,39 @@ pub fn drawScaledTexture(texture: rl.Texture2D, pos_x: f32, pos_y: f32, scale: f
 
 pub inline fn cIntToFloat(i: c_int) f32 {
     return @as(f32, @floatFromInt(i));
+}
+
+/// Casts an opaque pointer to a typed pointer.
+pub fn alignAndCast(comptime T: type, erased_ptr: *anyopaque) *T {
+    return @alignCast(@ptrCast(erased_ptr));
+}
+
+/// A simple task struct that runs a function pointer at a specified period.
+pub fn Task(comptime TContext: type) type {
+    return struct {
+        const Self = @This();
+
+        /// The period, in seconds, between each run of the task.
+        period: f32,
+        /// An internal counter to keep track of the last time the task was run.
+        last_run: f64 = 0,
+        /// A constant function pointer to the task to run.
+        task: *const fn (*TContext) anyerror!void,
+        context: *TContext,
+
+        /// Initializes the task with the specified period, task function pointer, and context.
+        pub fn init(period: f32, task: *const fn (*TContext) anyerror!void, context: *TContext) Self {
+            return Self{ .period = period, .task = task, .context = context };
+        }
+
+        /// Ticks the task, running it if the period has elapsed & updating the last run time.
+        pub fn tick(self: *Self) anyerror!void {
+            const now = rl.getTime();
+
+            if (now - self.last_run >= self.period) {
+                self.last_run = now;
+                try (self.task)(self.context);
+            }
+        }
+    };
 }

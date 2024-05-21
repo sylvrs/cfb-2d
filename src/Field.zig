@@ -28,6 +28,13 @@ pub fn init(scale: f32) Self {
     };
 }
 
+/// Deinitializes the current instance of the field
+pub fn deinit(self: *Self) void {
+    rl.unloadTexture(self.base_texture);
+    rl.unloadTexture(self.markers_texture);
+    rl.unloadTexture(self.endzones_texture);
+}
+
 pub fn setScale(self: *Self, scale: f32) void {
     self.scale = scale;
 }
