@@ -5,15 +5,9 @@ const Field = @import("../Field.zig");
 const Player = @import("../Player.zig");
 const Scene = @import("../Scene.zig");
 const GameState = @import("../GameState.zig");
+const Team = @import("../Team.zig");
 
 const Self = @This();
-
-/// A team that is playing the game.
-pub const Team = struct {
-    name: [:0]const u8,
-    color: rl.Color,
-    score: u32 = 0,
-};
 
 /// The teams that are playing the game.
 teams: [2]Team,
@@ -27,14 +21,22 @@ playclock: u32 = 40,
 player: Player,
 /// The field that the player is playing on.
 field: Field,
+/// The task that is responsible for ticking the game.
+tick_task: ?utils.Task(Self) = null,
 
 /// Initializes a new instance of the game scene.
 pub fn init(scale: f32, player_pos: rl.Vector2, teams: [2]Team) Self {
     return Self{
         .teams = teams,
         .player = Player.init(player_pos, scale),
-        .field = Field.init(scale),
+        .field = Field.init(scale, teams[0]),
+        .tick_task = null,
     };
+}
+
+/// Starts the tick task for the game scene.
+pub fn start(self: *Self) !void {
+    self.tick_task = utils.Task(Self).init(1, tick, self);
 }
 
 /// Deinitializes the game scene.
@@ -47,8 +49,22 @@ pub fn deinit(erased_self: *anyopaque) void {
 /// Updates the game scene.
 pub fn update(erased_self: *anyopaque) !void {
     const self = utils.alignAndCast(Self, erased_self);
+    if (self.tick_task == null) {
+        try self.start();
+    }
     self.field.update();
     self.player.update();
+
+    try self.tick_task.?.tick();
+}
+
+/// Ticks the game scene.
+pub fn tick(self: *Self) !void {
+    self.time_remaining -= 1;
+    if (self.time_remaining == 0) {
+        self.time_remaining = 60 * 15;
+        self.quarter += 1;
+    }
 }
 
 /// Draws the game scene.
@@ -70,7 +86,14 @@ pub fn drawWorld(self: *Self) void {
 
 /// Draws the HUD elements of the game scene.
 pub fn drawHud(self: *Self) !void {
-    _ = self;
+    utils.drawCenteredRectangle(@divFloor(rl.getScreenWidth(), 2), rl.getScreenHeight() - 100, 300, 50, rl.Color.black);
+
+    try utils.drawCenteredFmtText(@divFloor(rl.getScreenWidth(), 2), rl.getScreenHeight() - 100, 32, rl.Color.white, 64, "Q{d} | {d:0>2}:{d:0>2} | {d}", .{
+        self.quarter,
+        @divFloor(self.time_remaining, 60),
+        self.time_remaining % 60,
+        self.playclock,
+    });
 }
 
 /// Returns an instance of the scene
