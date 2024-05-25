@@ -6,7 +6,7 @@ const Self = @This();
 const CameraSmoothing = 0.15;
 
 const BaseSpeed = 3.5;
-const MaxSpeed = BaseSpeed * 2;
+const MaxSpeed = BaseSpeed * 1.5;
 const Acceleration = 0.5;
 
 /// The camera following the player.
@@ -14,7 +14,7 @@ camera: rl.Camera2D,
 /// The player's position.
 position: rl.Vector2,
 /// The player's speed.
-speed: f32 = 3.5,
+speed: f32 = 0.01,
 /// The player's size.
 size: rl.Vector2 = .{ .x = 20, .y = 40 },
 /// The player's color.
