@@ -77,6 +77,14 @@ pub fn drawScaledTexture(texture: rl.Texture2D, pos_x: f32, pos_y: f32, scale: f
     );
 }
 
+/// Creates a randomized color with the given type, low, and high values.
+pub fn randomColor() rl.Color {
+    const r: u8 = @intCast(rl.getRandomValue(1, 255));
+    const g: u8 = @intCast(rl.getRandomValue(1, 255));
+    const b: u8 = @intCast(rl.getRandomValue(1, 255));
+    return rl.Color.init(r, g, b, 255);
+}
+
 pub inline fn cIntToFloat(i: c_int) f32 {
     return @as(f32, @floatFromInt(i));
 }

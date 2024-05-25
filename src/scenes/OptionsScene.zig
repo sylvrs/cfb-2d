@@ -14,7 +14,7 @@ game_state: *GameState,
 /// The menu for the scene.
 menu: ui.Menu,
 
-/// Creates a new MainMenu scene.
+/// Creates a new OptionsScene scene.
 pub fn init(allocator: std.mem.Allocator, game_state: *GameState) Self {
     return Self{
         .allocator = allocator,
@@ -23,46 +23,40 @@ pub fn init(allocator: std.mem.Allocator, game_state: *GameState) Self {
     };
 }
 
-/// Deinitializes the MainMenu scene.
+/// Deinitializes the OptionsScene scene.
 pub fn deinit(erased_self: *anyopaque) void {
     const self = utils.alignAndCast(Self, erased_self);
     self.menu.deinit();
 }
 
-/// Sets up the buttons for the MainMenu scene.
+/// Sets up the buttons for the OptionsScene scene.
 pub fn setup(erased_self: *anyopaque) !void {
     const self = utils.alignAndCast(Self, erased_self);
     try self.menu.addElement(ui.Button{
-        .text = "Play",
-        .bg_color = rl.Color.maroon,
+        .text = "Back",
+        .bg_color = rl.Color.blue,
         .text_color = rl.Color.white,
         .x = @divFloor(rl.getScreenWidth(), 2),
         .y = @divFloor(rl.getScreenHeight(), 2),
         .width = 200,
         .height = 50,
-        .onClickFn = onPlayClick,
-        .context = erased_self,
-    });
-    try self.menu.addElement(ui.Button{
-        .text = "Options",
-        .bg_color = rl.Color.blue,
-        .text_color = rl.Color.white,
-        .x = @divFloor(rl.getScreenWidth(), 2),
-        .y = @divFloor(rl.getScreenHeight(), 2) + 75,
-        .width = 200,
-        .height = 50,
         .onClickFn = struct {
             pub fn onClick(erased_scene: *anyopaque) anyerror!void {
                 const menu_scene = utils.alignAndCast(Self, erased_scene);
-                try menu_scene.game_state.setScene(.options);
+                try menu_scene.game_state.setScene(.main_menu);
             }
         }.onClick,
-        .context = erased_self,
+        .context = self,
     });
 }
 
+/// Adds a button to the MainMenu scene.
+pub fn addButton(self: *Self, button: ui.Button) std.mem.Allocator.Error!void {
+    try self.buttons.append(self.allocator, button);
+}
+
 /// Updates the MainMenu scene.
-pub fn update(erased_self: *anyopaque) anyerror!void {
+pub fn update(erased_self: *anyopaque) !void {
     const self = utils.alignAndCast(Self, erased_self);
     try self.menu.update();
 }

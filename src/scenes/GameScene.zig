@@ -4,17 +4,39 @@ const utils = @import("../utils.zig");
 const Field = @import("../Field.zig");
 const Player = @import("../Player.zig");
 const Scene = @import("../Scene.zig");
+const GameState = @import("../GameState.zig");
 
 const Self = @This();
 
+/// A team that is playing the game.
+pub const Team = struct {
+    name: [:0]const u8,
+    color: rl.Color,
+    score: u32 = 0,
+};
+
+/// The teams that are playing the game.
+teams: [2]Team,
+/// The current quarter of the game.
+quarter: u8 = 1,
+/// The time remaining in the current quarter.
+time_remaining: u32 = 60 * 15,
+/// The time remaining in the current playclock.
+playclock: u32 = 40,
 /// The player that is currently playing.
 player: Player,
 /// The field that the player is playing on.
 field: Field,
+/// The scorebug texture used to display the score.
+scorebug: rl.Texture2D,
 
 /// Initializes a new instance of the game scene.
-pub fn init(scale: f32, player_pos: rl.Vector2) Self {
-    return Self{ .player = Player.init(player_pos, scale), .field = Field.init(scale) };
+pub fn init(scale: f32, player_pos: rl.Vector2, teams: [2]Team) Self {
+    return Self{
+        .teams = teams,
+        .player = Player.init(player_pos, scale),
+        .field = Field.init(scale),
+    };
 }
 
 /// Deinitializes the game scene.
@@ -37,20 +59,6 @@ pub fn draw(erased_self: *anyopaque) !void {
 
     self.drawNonHudElements();
     try self.drawHud();
-}
-
-/// Draws the HUD elements of the game scene.
-pub fn drawHud(self: *Self) !void {
-    try utils.drawFmtTextWithBackground(
-        10,
-        10,
-        24,
-        rl.Color.white,
-        rl.Color.black,
-        48,
-        "pos: (x: {d:2}, y: {d:2})",
-        .{ self.player.position.x, self.player.position.y },
-    );
 }
 
 /// Draws the non-HUD elements of the game scene.

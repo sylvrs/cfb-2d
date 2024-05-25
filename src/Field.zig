@@ -39,13 +39,7 @@ pub fn init(scale: f32) Self {
         .base_tint = rl.Color.dark_green,
         .endzone_text = "COLLEGE FOOTBALL",
         // randomize the endzone tint
-        .endzones_tint = tint: {
-            const r: u8 = @intCast(rl.getRandomValue(1, 255));
-            const g: u8 = @intCast(rl.getRandomValue(1, 255));
-            const b: u8 = @intCast(rl.getRandomValue(1, 255));
-
-            break :tint rl.Color.init(r, g, b, 255);
-        },
+        .endzones_tint = utils.randomColor(),
         .scale = scale,
     };
 }
@@ -63,7 +57,9 @@ pub fn setScale(self: *Self, scale: f32) void {
 
 /// Updates the field
 pub fn update(self: *Self) void {
-    _ = self;
+    if (rl.isGamepadButtonPressed(0, .gamepad_button_right_face_left)) {
+        self.endzones_tint = utils.randomColor();
+    }
 }
 
 /// Draws the field to the screen
@@ -77,7 +73,7 @@ pub fn draw(self: Self) void {
 pub fn drawEndzones(self: Self) void {
     utils.drawScaledTexture(self.endzones_texture, 0, 0, self.scale, self.endzones_tint);
 
-    for (EndzoneText.Bounds) |bound| {
+    inline for (EndzoneText.Bounds) |bound| {
         utils.drawCenteredTextPro(
             rl.getFontDefault(),
             self.endzone_text,

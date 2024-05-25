@@ -5,7 +5,7 @@ const utils = @import("utils.zig");
 const Self = @This();
 const CameraSmoothing = 0.15;
 
-const BaseSpeed = 3.5;
+const BaseSpeed = 1.5;
 const MaxSpeed = BaseSpeed * 1.5;
 const Acceleration = 0.5;
 
@@ -14,7 +14,7 @@ camera: rl.Camera2D,
 /// The player's position.
 position: rl.Vector2,
 /// The player's speed.
-speed: f32 = 0.01,
+speed: f32 = BaseSpeed,
 /// The player's size.
 size: rl.Vector2 = .{ .x = 20, .y = 40 },
 /// The player's color.

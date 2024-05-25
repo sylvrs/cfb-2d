@@ -2,9 +2,11 @@ const std = @import("std");
 const rl = @import("raylib");
 const utils = @import("utils.zig");
 const Scene = @import("Scene.zig");
+
 /// The scenes that the game can switch between.
 const MainMenuScene = @import("scenes/MainMenuScene.zig");
 const GameScene = @import("scenes/GameScene.zig");
+const OptionsScene = @import("scenes/OptionsScene.zig");
 
 const Self = @This();
 
@@ -23,6 +25,7 @@ const TitleUpdatePeriod = 3.0 / 4.0;
 const SceneState = enum {
     main_menu,
     game,
+    options,
 };
 
 const SceneWrapperMetadata = struct {
@@ -64,6 +67,7 @@ fn updateTitle(_: *Self) !void {
     try utils.setFmtWindowTitle(32, "{s} [FPS: {d}]", .{ Title, rl.getFPS() });
 }
 
+/// Updates the game state as needed.
 pub fn update(self: *Self) anyerror!void {
     try self.title_task.tick();
     try self.current_scene.update();
@@ -80,7 +84,11 @@ pub fn setScene(self: *Self, scene: SceneState) !void {
         .game => try self.setupScene(GameScene.init(Scale, rl.Vector2{
             .x = @divExact(ScreenWidth, Scale),
             .y = @divExact(ScreenHeight, Scale),
+        }, [_]GameScene.Team{
+            .{ .name = "Team 1", .color = rl.Color.red },
+            .{ .name = "Team 2", .color = rl.Color.blue },
         })),
+        .options => try self.setupScene(OptionsScene.init(self.allocator, self)),
     }
 }
 
@@ -103,7 +111,6 @@ pub fn destroyCurrentSceneWrapper(self: *Self) void {
         return;
     }
     const unwrapped = self.scene_wrapper_metadata.?;
-    std.debug.print("unwrapped ptr: {p}\n", .{unwrapped.scene_ptr});
     const wrapper_many_ptr: [*]u8 = @ptrCast(@constCast(unwrapped.scene_ptr));
     self.allocator.rawFree(wrapper_many_ptr[0..unwrapped.size], unwrapped.alignment, @returnAddress());
 }
