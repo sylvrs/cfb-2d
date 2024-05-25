@@ -22,14 +22,18 @@ pub fn drawFmtText(x: i32, y: i32, font_size: i32, color: rl.Color, comptime buf
     rl.drawText(text, x, y, font_size, color);
 }
 
+/// Formats, centers, and draws text at the specified position. Requires a comptime known buffer size.
+pub fn drawCenteredFmtText(x: i32, y: i32, font_size: i32, color: rl.Color, comptime buf_size: usize, comptime fmt: []const u8, args: anytype) std.fmt.BufPrintError!void {
+    var text_buf: [buf_size]u8 = undefined;
+    const text = try std.fmt.bufPrintZ(&text_buf, fmt, args);
+    drawCenteredText(text, x, y, font_size, color);
+}
+
 /// Formats and draws text with a background rectangle. Requires a comptime known buffer size.
 pub fn drawFmtTextWithBackground(x: i32, y: i32, font_size: i32, text_color: rl.Color, bg_color: rl.Color, comptime buf_size: usize, comptime fmt: []const u8, args: anytype) std.fmt.BufPrintError!void {
     var text_buf: [buf_size]u8 = undefined;
     const text = try std.fmt.bufPrintZ(&text_buf, fmt, args);
     const text_size = rl.measureText(text, font_size);
-
-    // width = 4, height = 2
-    // x = 2, y = 1
 
     rl.drawRectangle(
         x,
@@ -62,6 +66,17 @@ pub fn drawCenteredTextPro(font: rl.Font, text: [:0]const u8, position: rl.Vecto
         font_size,
         spacing,
         text_color,
+    );
+}
+
+/// Draws a centered rectangle at the specified position.
+pub inline fn drawCenteredRectangle(x: i32, y: i32, width: i32, height: i32, color: rl.Color) void {
+    rl.drawRectangle(
+        x - @divFloor(width, 2),
+        y - @divFloor(height, 2),
+        width,
+        height,
+        color,
     );
 }
 
