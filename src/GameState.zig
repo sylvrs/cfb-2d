@@ -2,6 +2,7 @@ const std = @import("std");
 const rl = @import("raylib");
 const utils = @import("utils.zig");
 const Scene = @import("Scene.zig");
+const Team = @import("Team.zig");
 
 /// The scenes that the game can switch between.
 const MainMenuScene = @import("scenes/MainMenuScene.zig");
@@ -84,9 +85,9 @@ pub fn setScene(self: *Self, scene: SceneState) !void {
         .game => try self.setupScene(GameScene.init(Scale, rl.Vector2{
             .x = @divExact(ScreenWidth, Scale),
             .y = @divExact(ScreenHeight, Scale),
-        }, [_]GameScene.Team{
-            .{ .name = "Team 1", .color = rl.Color.red },
-            .{ .name = "Team 2", .color = rl.Color.blue },
+        }, [_]Team{
+            try Team.find("Oklahoma State"),
+            try Team.find("West Virginia"),
         })),
         .options => try self.setupScene(OptionsScene.init(self.allocator, self)),
     }
