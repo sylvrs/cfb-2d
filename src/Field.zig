@@ -2,6 +2,7 @@ const std = @import("std");
 const rl = @import("raylib");
 const utils = @import("utils.zig");
 const GameState = @import("GameState.zig");
+const Team = @import("Team.zig");
 
 const Self = @This();
 
@@ -10,8 +11,8 @@ const EndzoneText = struct {
         .{ .x = 70, .y = GameState.ScreenHeight / 2, .rotation = 270 },
         .{ .x = GameState.ScreenWidth - 70, .y = GameState.ScreenHeight / 2, .rotation = 90 },
     };
-    const Size = 56;
-    const Spacing = 8;
+    const BaseScale = 64;
+    const BaseSpacing = 96;
     const BrightnessFactor = 0.75;
 };
 
@@ -25,21 +26,20 @@ endzones_texture: rl.Texture2D,
 base_tint: rl.Color,
 /// The tint of the endzones
 endzones_tint: rl.Color,
-/// The text to display in the endzones
 endzone_text: [:0]const u8,
 /// The scale at which to draw the field
 scale: f32 = 2,
 
 /// Initializes an instance of the field
-pub fn init(scale: f32) Self {
+pub fn init(scale: f32, home_team: Team) Self {
     return Self{
         .base_texture = rl.loadTexture("assets/field_base.png"),
         .markers_texture = rl.loadTexture("assets/field_markers.png"),
         .endzones_texture = rl.loadTexture("assets/field_endzones.png"),
         .base_tint = rl.Color.dark_green,
-        .endzone_text = "COLLEGE FOOTBALL",
+        .endzone_text = rl.textToUpper(home_team.name),
         // randomize the endzone tint
-        .endzones_tint = utils.randomColor(),
+        .endzones_tint = home_team.primary_color,
         .scale = scale,
     };
 }
@@ -58,7 +58,9 @@ pub fn setScale(self: *Self, scale: f32) void {
 /// Updates the field
 pub fn update(self: *Self) void {
     if (rl.isGamepadButtonPressed(0, .gamepad_button_right_face_left)) {
-        self.endzones_tint = utils.randomColor();
+        const team = Team.random();
+        self.endzones_tint = team.primary_color;
+        self.endzone_text = rl.textToUpper(team.name);
     }
 }
 
@@ -80,8 +82,8 @@ pub fn drawEndzones(self: Self) void {
             rl.Vector2.init(bound.x, bound.y),
             rl.Vector2.init(0, 0),
             bound.rotation,
-            EndzoneText.Size,
-            EndzoneText.Spacing,
+            EndzoneText.BaseScale,
+            EndzoneText.BaseSpacing / @as(f32, @floatFromInt(self.endzone_text.len)),
             self.endzones_tint.brightness(EndzoneText.BrightnessFactor),
         );
     }
