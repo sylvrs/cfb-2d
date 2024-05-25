@@ -27,8 +27,6 @@ playclock: u32 = 40,
 player: Player,
 /// The field that the player is playing on.
 field: Field,
-/// The scorebug texture used to display the score.
-scorebug: rl.Texture2D,
 
 /// Initializes a new instance of the game scene.
 pub fn init(scale: f32, player_pos: rl.Vector2, teams: [2]Team) Self {
@@ -57,17 +55,22 @@ pub fn update(erased_self: *anyopaque) !void {
 pub fn draw(erased_self: *anyopaque) !void {
     const self = utils.alignAndCast(Self, erased_self);
 
-    self.drawNonHudElements();
+    self.drawWorld();
     try self.drawHud();
 }
 
 /// Draws the non-HUD elements of the game scene.
-pub fn drawNonHudElements(self: *Self) void {
+pub fn drawWorld(self: *Self) void {
     self.player.startCamera();
     defer self.player.endCamera();
 
     self.field.draw();
     self.player.draw();
+}
+
+/// Draws the HUD elements of the game scene.
+pub fn drawHud(self: *Self) !void {
+    _ = self;
 }
 
 /// Returns an instance of the scene
