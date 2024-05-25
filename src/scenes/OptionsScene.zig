@@ -66,7 +66,7 @@ pub fn draw(erased_self: *anyopaque) anyerror!void {
     const self = utils.alignAndCast(Self, erased_self);
     rl.clearBackground(rl.Color.ray_white);
 
-    utils.drawCenteredText("College Football", @divFloor(rl.getScreenWidth(), 2), @divFloor(rl.getScreenHeight(), 4), 60, rl.Color.maroon);
+    utils.drawCenteredText("Options", @divFloor(rl.getScreenWidth(), 2), @divFloor(rl.getScreenHeight(), 4), 48, rl.Color.maroon);
     try self.menu.draw();
 }
 
