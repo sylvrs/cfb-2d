@@ -24,14 +24,12 @@ pub fn init(allocator: std.mem.Allocator, game_state: *GameState) Self {
 }
 
 /// Deinitializes the OptionsScene scene.
-pub fn deinit(erased_self: *anyopaque) void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn deinit(self: *Self) void {
     self.menu.deinit();
 }
 
 /// Sets up the buttons for the OptionsScene scene.
-pub fn setup(erased_self: *anyopaque) !void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn setup(self: *Self) !void {
     try self.menu.addElement(ui.Button{
         .text = "Back",
         .bg_color = rl.Color.blue,
@@ -56,14 +54,12 @@ pub fn addButton(self: *Self, button: ui.Button) std.mem.Allocator.Error!void {
 }
 
 /// Updates the MainMenu scene.
-pub fn update(erased_self: *anyopaque) !void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn update(self: *Self) !void {
     try self.menu.update();
 }
 
 /// Draws the MainMenu scene.
-pub fn draw(erased_self: *anyopaque) anyerror!void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn draw(self: *Self) anyerror!void {
     rl.clearBackground(rl.Color.ray_white);
 
     utils.drawCenteredText("Options", @divFloor(rl.getScreenWidth(), 2), @divFloor(rl.getScreenHeight(), 4), 48, rl.Color.maroon);
@@ -78,11 +74,5 @@ pub fn onPlayClick(erased_self: *anyopaque) anyerror!void {
 
 /// Returns a scene object for the MainMenu scene.
 pub fn scene(self: *Self) Scene {
-    return .{
-        .context = @ptrCast(self),
-        .updateFn = update,
-        .drawFn = draw,
-        .setupFn = setup,
-        .deinitFn = deinit,
-    };
+    return Scene.init(self);
 }

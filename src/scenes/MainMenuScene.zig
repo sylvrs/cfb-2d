@@ -24,14 +24,12 @@ pub fn init(allocator: std.mem.Allocator, game_state: *GameState) Self {
 }
 
 /// Deinitializes the MainMenu scene.
-pub fn deinit(erased_self: *anyopaque) void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn deinit(self: *Self) void {
     self.menu.deinit();
 }
 
 /// Sets up the buttons for the MainMenu scene.
-pub fn setup(erased_self: *anyopaque) !void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn setup(self: *Self) !void {
     try self.menu.addElement(ui.Button{
         .text = "Play",
         .bg_color = rl.Color.maroon,
@@ -41,7 +39,7 @@ pub fn setup(erased_self: *anyopaque) !void {
         .width = 200,
         .height = 50,
         .onClickFn = onPlayClick,
-        .context = erased_self,
+        .context = @ptrCast(self),
     });
     try self.menu.addElement(ui.Button{
         .text = "Options",
@@ -57,19 +55,17 @@ pub fn setup(erased_self: *anyopaque) !void {
                 try menu_scene.game_state.setScene(.options);
             }
         }.onClick,
-        .context = erased_self,
+        .context = @ptrCast(self),
     });
 }
 
 /// Updates the MainMenu scene.
-pub fn update(erased_self: *anyopaque) anyerror!void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn update(self: *Self) anyerror!void {
     try self.menu.update();
 }
 
 /// Draws the MainMenu scene.
-pub fn draw(erased_self: *anyopaque) anyerror!void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn draw(self: *Self) anyerror!void {
     rl.clearBackground(rl.Color.ray_white);
 
     utils.drawCenteredText("College Football", @divFloor(rl.getScreenWidth(), 2), @divFloor(rl.getScreenHeight(), 4), 60, rl.Color.maroon);
@@ -84,11 +80,5 @@ pub fn onPlayClick(erased_self: *anyopaque) anyerror!void {
 
 /// Returns a scene object for the MainMenu scene.
 pub fn scene(self: *Self) Scene {
-    return .{
-        .context = @ptrCast(self),
-        .updateFn = update,
-        .drawFn = draw,
-        .setupFn = setup,
-        .deinitFn = deinit,
-    };
+    return Scene.init(self);
 }

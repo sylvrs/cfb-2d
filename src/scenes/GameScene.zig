@@ -35,23 +35,18 @@ pub fn init(scale: f32, player_pos: rl.Vector2, teams: [2]Team) Self {
 }
 
 /// Starts the tick task for the game scene.
-pub fn start(self: *Self) !void {
+pub fn setup(self: *Self) !void {
     self.tick_task = utils.Task(Self).init(1, tick, self);
 }
 
 /// Deinitializes the game scene.
-pub fn deinit(erased_self: *anyopaque) void {
-    const self = utils.alignAndCast(Self, erased_self);
+pub fn deinit(self: *Self) void {
     self.field.deinit();
     self.player.deinit();
 }
 
 /// Updates the game scene.
-pub fn update(erased_self: *anyopaque) !void {
-    const self = utils.alignAndCast(Self, erased_self);
-    if (self.tick_task == null) {
-        try self.start();
-    }
+pub fn update(self: *Self) !void {
     self.field.update();
     self.player.update();
 
@@ -68,9 +63,7 @@ pub fn tick(self: *Self) !void {
 }
 
 /// Draws the game scene.
-pub fn draw(erased_self: *anyopaque) !void {
-    const self = utils.alignAndCast(Self, erased_self);
-
+pub fn draw(self: *Self) !void {
     self.drawWorld();
     try self.drawHud();
 }
@@ -98,5 +91,5 @@ pub fn drawHud(self: *Self) !void {
 
 /// Returns an instance of the scene
 pub fn scene(self: *Self) Scene {
-    return .{ .context = @ptrCast(self), .updateFn = update, .drawFn = draw, .deinitFn = deinit };
+    return Scene.init(self);
 }
