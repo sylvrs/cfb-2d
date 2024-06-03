@@ -15,8 +15,7 @@ deinitFn: *const fn (context: *anyopaque) void,
 
 /// Initializes a scene from a pointer to a type that implements the `Scene` interface.
 pub fn init(scene_ptr: anytype) Self {
-    const ScenePtrType = @TypeOf(scene_ptr);
-    const scene_ptr_info = @typeInfo(ScenePtrType);
+    const scene_ptr_info = @typeInfo(@TypeOf(scene_ptr));
     if (scene_ptr_info != .Pointer) {
         @compileError("The scene pointer must be a pointer type.");
     }
