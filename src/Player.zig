@@ -95,6 +95,13 @@ pub fn update(self: *Self) void {
     else
         rlm.lerp(self.speed, BaseSpeed, Acceleration);
 
+    // debug key to change the player's team
+    if (rl.isKeyDown(.key_t) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_up)) {
+        self.team = Team.random();
+        self.animation.texture = loadAndShadeTexture(self.team, self.skin_color);
+        utils.fmtTrace(.log_info, 64, "New Team: {s}", .{self.team.name}) catch unreachable;
+    }
+
     // move the player based on input
     if (rl.isKeyDown(.key_w) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_up)) {
         self.position.y -= self.speed;
@@ -149,11 +156,12 @@ fn loadAndShadeTexture(team: Team, skin_color: SkinColor) rl.Texture {
     var copied = image.copy();
     defer copied.unload();
 
+    const jersey = team.fetchJersey(if (team.site == .home) .home else .away);
     inline for (ColorReplacementMap.kvs) |entry| {
         const color = if (std.mem.eql(u8, entry.key, "primary_color"))
-            team.primary_color
+            jersey.primary_color
         else if (std.mem.eql(u8, entry.key, "secondary_color"))
-            team.secondary_color
+            jersey.secondary_color
         else
             skin_color.color();
 

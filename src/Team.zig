@@ -17,20 +17,35 @@ pub const Conference = enum {
     cusa,
 };
 
+pub const GameSite = enum { home, away };
+
+/// The team's jersey colors.
+pub const Jersey = struct {
+    primary_color: rl.Color,
+    secondary_color: rl.Color,
+};
+
+pub const JerseyType = enum { home, away, alternate };
+
 /// The team's name.
 name: [:0]const u8,
 /// The team's primary color.
 primary_color: rl.Color,
 /// The team's secondary color.
 secondary_color: rl.Color,
+/// The team's list of jerseys.
+jerseys: std.EnumArray(JerseyType, Jersey),
 /// The team's conference.
 conference: Conference,
 /// The team's current score.
 score: u32 = 0,
+/// The team's game site.
+site: GameSite = .away,
 
 pub const AllTeams = std.ComptimeStringMap(Self, .{
     // BIG 12 teams
     mapInit("Baylor", 0x154734, 0xFFB81C, .big_12),
+    mapInit("BYU", 0x0062B8, 0xFFFFFF, .big_12),
     mapInit("Iowa State", 0xC8102E, 0xF1BE48, .big_12),
     mapInit("Kansas", 0x0051BA, 0xE8000D, .big_12),
     mapInit("Kansas State", 0x512888, 0xD1D1D1, .big_12),
@@ -42,12 +57,33 @@ pub const AllTeams = std.ComptimeStringMap(Self, .{
 
 /// Initializes a team for the `AllTeams` map.
 inline fn mapInit(name: [:0]const u8, primary_color: u32, secondary_color: u32, conference: Conference) struct { []const u8, Self } {
-    return .{ name, Self{
-        .name = name,
-        .primary_color = resolveColor(primary_color),
-        .secondary_color = resolveColor(secondary_color),
-        .conference = conference,
-    } };
+    return .{
+        name, Self{
+            .name = name,
+            .primary_color = resolveColor(primary_color),
+            .secondary_color = resolveColor(secondary_color),
+            .jerseys = makeJerseysFromColors(primary_color, secondary_color),
+            .conference = conference,
+        },
+    };
+}
+
+/// Creates an `EnumArray` of `Jersey` structs from primary and secondary colors.
+inline fn makeJerseysFromColors(primary: u32, secondary: u32) std.EnumArray(JerseyType, Jersey) {
+    return std.EnumArray(JerseyType, Jersey).init(.{
+        .home = .{
+            .primary_color = resolveColor(primary),
+            .secondary_color = resolveColor(secondary),
+        },
+        .away = .{
+            .primary_color = resolveColor(0xFFFFFF),
+            .secondary_color = resolveColor(primary),
+        },
+        .alternate = .{
+            .primary_color = resolveColor(secondary),
+            .secondary_color = resolveColor(primary),
+        },
+    });
 }
 
 /// Resolves a color from a hex value.
@@ -71,4 +107,9 @@ pub fn random() Self {
     const index = rl.getRandomValue(0, AllTeams.kvs.len - 1);
     const entry = AllTeams.kvs[@as(usize, @intCast(index))];
     return AllTeams.get(entry.key).?;
+}
+
+/// Returns the team's jersey based on the `JerseyType`.
+pub fn fetchJersey(team: Self, jersey_type: JerseyType) Jersey {
+    return team.jerseys.get(jersey_type);
 }
