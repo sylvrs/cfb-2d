@@ -20,7 +20,7 @@ pub const ScreenHeight = 320 * Scale;
 /// The title of the window.
 pub const Title = "College Ball";
 /// The period, in seconds, between each update of the window title.
-const TitleUpdatePeriod = 3.0 / 4.0;
+const TitleUpdatePeriod = 0.01;
 
 /// The different scenes that the game can be in.
 const SceneState = enum {
@@ -29,7 +29,7 @@ const SceneState = enum {
     options,
 };
 
-const SceneWrapperMetadata = struct {
+const SceneRefMetadata = struct {
     /// The size of the scene wrapper struct.
     size: usize,
     /// The alignment of the scene wrapper struct.
@@ -42,10 +42,14 @@ const SceneWrapperMetadata = struct {
 allocator: std.mem.Allocator,
 /// The task that updates the window title.
 title_task: utils.Task(Self) = undefined,
+/// A pointer to the last scene struct.
+last_ref_metadata: ?SceneRefMetadata = null,
 /// A pointer to the current scene struct.
-scene_wrapper_metadata: ?SceneWrapperMetadata = null,
+current_ref_metadata: ?SceneRefMetadata = null,
+/// The last scene that the game was in.
+last_scene: ?Scene = null,
 /// The current scene that the game is in.
-current_scene: Scene = undefined,
+current_scene: ?Scene = null,
 
 /// Initializes the game state.
 pub fn init(allocator: std.mem.Allocator) Self {
@@ -54,7 +58,7 @@ pub fn init(allocator: std.mem.Allocator) Self {
 
 /// Deinitializes the game state.
 pub fn deinit(self: *Self) void {
-    self.current_scene.deinit();
+    self.current_scene.?.deinit();
 }
 
 /// Sets up the game state.
@@ -71,47 +75,57 @@ fn updateTitle(_: *Self) !void {
 /// Updates the game state as needed.
 pub fn update(self: *Self) anyerror!void {
     try self.title_task.tick();
-    try self.current_scene.update();
+    try self.current_scene.?.update();
+
+    // Destroy the last scene if it exists.
+    self.destroyLastScene();
 }
 
 pub fn draw(self: *Self) anyerror!void {
-    try self.current_scene.draw();
+    try self.current_scene.?.draw();
 }
 
 pub fn setScene(self: *Self, scene: SceneState) !void {
-    // self.destroyCurrentSceneWrapper();
     switch (scene) {
         .main_menu => try self.setupScene(MainMenuScene.init(self.allocator, self)),
         .game => try self.setupScene(GameScene.init(Scale, rl.Vector2{
             .x = @divExact(ScreenWidth, Scale),
             .y = @divExact(ScreenHeight, Scale),
-        }, [_]Team{
-            try Team.find("Oklahoma State"),
-            try Team.find("West Virginia"),
-        })),
+        }, [_]Team{ Team.random(), Team.random() })),
         .options => try self.setupScene(OptionsScene.init(self.allocator, self)),
     }
 }
 
 /// Setups the scene with the given setup function
 fn setupScene(self: *Self, scene: anytype) !void {
+    self.last_scene = self.current_scene;
     const T = @TypeOf(scene);
     var created_scene = try self.allocator.create(T);
     created_scene.* = scene;
     self.current_scene = created_scene.scene();
-    try self.current_scene.setup();
-    self.scene_wrapper_metadata = SceneWrapperMetadata{
+    try self.current_scene.?.setup();
+    errdefer self.allocator.destroy(created_scene);
+
+    // Set the last wrapper metadata to the current one.
+    self.last_ref_metadata = self.current_ref_metadata;
+    // Set the current wrapper metadata to the new one.
+    self.current_ref_metadata = SceneRefMetadata{
         .size = @sizeOf(T),
         .alignment = @alignOf(T),
         .scene_ptr = created_scene,
     };
 }
 
-pub fn destroyCurrentSceneWrapper(self: *Self) void {
-    if (self.scene_wrapper_metadata == null) {
+pub fn destroyLastScene(self: *Self) void {
+    if (self.last_ref_metadata == null or self.last_scene == null) {
         return;
     }
-    const unwrapped = self.scene_wrapper_metadata.?;
-    const wrapper_many_ptr: [*]u8 = @ptrCast(@constCast(unwrapped.scene_ptr));
+    self.last_scene.?.deinit();
+
+    const unwrapped = self.last_ref_metadata.?;
+    const wrapper_many_ptr: [*]u8 = @alignCast(@ptrCast(unwrapped.scene_ptr));
     self.allocator.rawFree(wrapper_many_ptr[0..unwrapped.size], unwrapped.alignment, @returnAddress());
+
+    self.last_ref_metadata = null;
+    self.last_scene = null;
 }
