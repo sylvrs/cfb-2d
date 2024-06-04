@@ -109,6 +109,7 @@ pub fn update(self: *Self) void {
     self.position.y = rlm.clamp(self.position.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())) - (AnimationSize * self.scale));
 }
 
+/// Updates the camera's zoom
 pub fn setZoom(self: *Self, zoom: f32) void {
     self.camera.zoom = zoom;
 }
@@ -142,7 +143,7 @@ pub fn draw(self: *Self) void {
     );
 }
 
-/// Loads the player's texture and shades it based on the team
+/// Loads the player's texture and shades it based on the team & skin color
 fn loadAndShadeTexture(team: Team, skin_color: SkinColor) rl.Texture {
     var image = rl.loadImage("assets/player.png");
     defer image.unload();
