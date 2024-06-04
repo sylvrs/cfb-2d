@@ -2,10 +2,13 @@ const std = @import("std");
 const rl = @import("raylib");
 const rlm = @import("raylib-math");
 const utils = @import("utils.zig");
+const Animation = @import("./engine/Animation.zig");
 const Team = @import("Team.zig");
 
 const Self = @This();
 const CameraSmoothing = 0.15;
+
+const PlayerScale = 2;
 
 const BaseSpeed = 1.5;
 const MaxSpeed = BaseSpeed * 1.5;
@@ -45,16 +48,14 @@ camera: rl.Camera2D,
 position: rl.Vector2,
 /// The player's speed.
 speed: f32 = BaseSpeed,
-/// The player's size.
-scale: f32 = 1.5,
 /// The player's team.
 team: Team,
 /// The player's skin color.
 skin_color: SkinColor,
-/// The player's spritesheet.
-spritesheet: rl.Texture,
+/// The player's animation spritesheet.
+animation: Animation,
 /// The player's current animation.
-animation: AnimationType = .idle,
+current_animation: AnimationType = .idle,
 
 /// Creates a new player.
 pub fn init(position: rl.Vector2, zoom: f32, team: Team, skin_color: SkinColor) Self {
@@ -72,14 +73,18 @@ pub fn init(position: rl.Vector2, zoom: f32, team: Team, skin_color: SkinColor) 
         .position = position,
         .team = team,
         .skin_color = skin_color,
-        .spritesheet = loadAndShadeTexture(team, skin_color),
+        .animation = Animation.init(
+            loadAndShadeTexture(team, skin_color),
+            1.25,
+            AnimationSize,
+            PlayerScale,
+        ),
     };
 }
 
 /// Deinitializes the player.
 pub fn deinit(self: *Self) void {
-    _ = self;
-    // TODO: unload the textures once we load them
+    self.animation.deinit();
 }
 
 /// Updates the player.
@@ -105,8 +110,10 @@ pub fn update(self: *Self) void {
     }
 
     // limit the player's position to the bounds of the screen
-    self.position.x = rlm.clamp(self.position.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())) - (AnimationSize * self.scale));
-    self.position.y = rlm.clamp(self.position.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())) - (AnimationSize * self.scale));
+    self.position.x = rlm.clamp(self.position.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())) - self.animation.width());
+    self.position.y = rlm.clamp(self.position.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())) - self.animation.height());
+
+    self.animation.update();
 }
 
 /// Updates the camera's zoom
@@ -132,15 +139,7 @@ pub fn draw(self: *Self) void {
     self.camera.target.x = rlm.clamp(self.camera.target.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())));
     self.camera.target.y = rlm.clamp(self.camera.target.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())));
 
-    const animation_offset = @intFromEnum(self.animation) * 16;
-
-    self.spritesheet.drawPro(
-        .{ .x = @floatFromInt(animation_offset), .y = 0, .width = AnimationSize, .height = AnimationSize },
-        .{ .x = self.position.x, .y = self.position.y, .width = AnimationSize * self.scale, .height = AnimationSize * self.scale },
-        .{ .x = 0, .y = 0 },
-        0,
-        rl.Color.light_gray,
-    );
+    self.animation.draw(self.position);
 }
 
 /// Loads the player's texture and shades it based on the team & skin color
