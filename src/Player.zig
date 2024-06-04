@@ -1,6 +1,8 @@
+const std = @import("std");
 const rl = @import("raylib");
 const rlm = @import("raylib-math");
 const utils = @import("utils.zig");
+const Team = @import("Team.zig");
 
 const Self = @This();
 const CameraSmoothing = 0.15;
@@ -9,6 +11,34 @@ const BaseSpeed = 1.5;
 const MaxSpeed = BaseSpeed * 1.5;
 const Acceleration = 0.5;
 
+pub const SkinColor = enum {
+    const Map = std.ComptimeStringMap(rl.Color, .{
+        .{ "white_1", rl.Color.init(255, 231, 209, 255) },
+        .{ "black_1", rl.Color.init(59, 34, 25, 255) },
+    });
+
+    white_1,
+    black_1,
+
+    pub fn color(self: SkinColor) rl.Color {
+        return Map.get(@tagName(self)).?;
+    }
+};
+
+/// A map of field names to colors for color replacement.
+const ColorReplacementMap = std.ComptimeStringMap(rl.Color, .{
+    .{ "primary_color", rl.Color.init(82, 82, 82, 255) },
+    .{ "secondary_color", rl.Color.init(167, 167, 167, 255) },
+    .{ "skin_color", rl.Color.white },
+});
+
+const AnimationSize = 32;
+const AnimationType = enum(u8) {
+    idle = 0,
+    walk = 1,
+    run = 2,
+};
+
 /// The camera following the player.
 camera: rl.Camera2D,
 /// The player's position.
@@ -16,12 +46,18 @@ position: rl.Vector2,
 /// The player's speed.
 speed: f32 = BaseSpeed,
 /// The player's size.
-size: rl.Vector2 = .{ .x = 20, .y = 40 },
-/// The player's color.
-color: rl.Color = rl.Color.red,
+scale: f32 = 1.5,
+/// The player's team.
+team: Team,
+/// The player's skin color.
+skin_color: SkinColor,
+/// The player's spritesheet.
+spritesheet: rl.Texture,
+/// The player's current animation.
+animation: AnimationType = .idle,
 
 /// Creates a new player.
-pub fn init(position: rl.Vector2, zoom: f32) Self {
+pub fn init(position: rl.Vector2, zoom: f32, team: Team, skin_color: SkinColor) Self {
     return .{
         .camera = .{
             // center the camera on the screen
@@ -34,6 +70,9 @@ pub fn init(position: rl.Vector2, zoom: f32) Self {
             .zoom = zoom,
         },
         .position = position,
+        .team = team,
+        .skin_color = skin_color,
+        .spritesheet = loadAndShadeTexture(team, skin_color),
     };
 }
 
@@ -66,8 +105,8 @@ pub fn update(self: *Self) void {
     }
 
     // limit the player's position to the bounds of the screen
-    self.position.x = rlm.clamp(self.position.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())) - self.size.x);
-    self.position.y = rlm.clamp(self.position.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())) - self.size.y);
+    self.position.x = rlm.clamp(self.position.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())) - (AnimationSize * self.scale));
+    self.position.y = rlm.clamp(self.position.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())) - (AnimationSize * self.scale));
 }
 
 pub fn setZoom(self: *Self, zoom: f32) void {
@@ -91,5 +130,35 @@ pub fn draw(self: *Self) void {
     // limit the camera target to the bounds of the screen
     self.camera.target.x = rlm.clamp(self.camera.target.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())));
     self.camera.target.y = rlm.clamp(self.camera.target.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())));
-    rl.drawRectangleV(self.position, self.size, self.color);
+
+    const animation_offset = @intFromEnum(self.animation) * 16;
+
+    self.spritesheet.drawPro(
+        .{ .x = @floatFromInt(animation_offset), .y = 0, .width = AnimationSize, .height = AnimationSize },
+        .{ .x = self.position.x, .y = self.position.y, .width = AnimationSize * self.scale, .height = AnimationSize * self.scale },
+        .{ .x = 0, .y = 0 },
+        0,
+        rl.Color.light_gray,
+    );
+}
+
+/// Loads the player's texture and shades it based on the team
+fn loadAndShadeTexture(team: Team, skin_color: SkinColor) rl.Texture {
+    var image = rl.loadImage("assets/player.png");
+    defer image.unload();
+    var copied = image.copy();
+    defer copied.unload();
+
+    inline for (ColorReplacementMap.kvs) |entry| {
+        const color = if (std.mem.eql(u8, entry.key, "primary_color"))
+            team.primary_color
+        else if (std.mem.eql(u8, entry.key, "secondary_color"))
+            team.secondary_color
+        else
+            skin_color.color();
+
+        copied.replaceColor(entry.value, color);
+    }
+
+    return rl.Texture.fromImage(copied);
 }

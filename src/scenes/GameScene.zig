@@ -28,7 +28,7 @@ tick_task: ?utils.Task(Self) = null,
 pub fn init(scale: f32, player_pos: rl.Vector2, teams: [2]Team) Self {
     return Self{
         .teams = teams,
-        .player = Player.init(player_pos, scale),
+        .player = Player.init(player_pos, scale, teams[0], .black_1),
         .field = Field.init(scale, teams[0]),
         .tick_task = null,
     };
