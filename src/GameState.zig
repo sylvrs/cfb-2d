@@ -88,10 +88,15 @@ pub fn draw(self: *Self) anyerror!void {
 pub fn setScene(self: *Self, scene: SceneState) !void {
     switch (scene) {
         .main_menu => try self.setupScene(MainMenuScene.init(self.allocator, self)),
-        .game => try self.setupScene(GameScene.init(Scale, rl.Vector2{
-            .x = @divExact(FieldWidth, Scale),
-            .y = @divExact(FieldHeight, Scale),
-        }, [_]Team{ Team.random(), Team.random() })),
+        .game => try self.setupScene(GameScene.init(
+            Scale,
+            rl.Vector2{
+                .x = @divExact(FieldWidth, Scale),
+                .y = @divExact(FieldHeight, Scale),
+            },
+            Team.random(),
+            Team.random(),
+        )),
         .options => try self.setupScene(OptionsScene.init(self.allocator, self)),
     }
 }

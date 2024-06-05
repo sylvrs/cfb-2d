@@ -55,13 +55,15 @@ pub fn setScale(self: *Self, scale: f32) void {
     self.scale = scale;
 }
 
+/// Sets the team of the field
+pub fn setTeam(self: *Self, team: Team) void {
+    self.endzones_tint = team.primary_color;
+    self.endzone_text = team.name;
+}
+
 /// Updates the field
 pub fn update(self: *Self) void {
-    if (rl.isGamepadButtonPressed(0, .gamepad_button_right_face_left)) {
-        const team = Team.random();
-        self.endzones_tint = team.primary_color;
-        self.endzone_text = rl.textToUpper(team.name);
-    }
+    _ = self;
 }
 
 /// Draws the field to the screen
@@ -78,7 +80,7 @@ pub fn drawEndzones(self: Self) void {
     inline for (EndzoneText.Bounds) |bound| {
         utils.drawCenteredTextPro(
             rl.getFontDefault(),
-            self.endzone_text,
+            rl.textToUpper(self.endzone_text),
             rl.Vector2.init(bound.x, bound.y),
             rl.Vector2.init(0, 0),
             bound.rotation,

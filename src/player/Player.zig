@@ -96,7 +96,6 @@ pub fn deinit(self: *Self) void {
 pub fn setTeam(self: *Self, team: Team) void {
     self.team = team;
     self.animation.texture = loadAndShadeTexture(team, self.skin_color);
-    utils.fmtTrace(.log_info, 64, "New Team: {s}", .{self.team.name}) catch unreachable;
 }
 
 /// Updates the player.
@@ -106,16 +105,6 @@ pub fn update(self: *Self) void {
         rlm.lerp(self.speed, MaxSpeed, Acceleration)
     else
         rlm.lerp(self.speed, BaseSpeed, Acceleration);
-
-    // debug key to change the player's team
-    if (rl.isKeyDown(.key_t) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_up)) {
-        self.setTeam(Team.random());
-    }
-
-    if (rl.isKeyDown(.key_y) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_right)) {
-        self.team.site = if (self.team.site == .home) .away else .home;
-        self.setTeam(self.team);
-    }
 
     // move the player based on input
     if (rl.isKeyDown(.key_w) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_up)) {
@@ -174,23 +163,11 @@ pub fn draw(self: *Self) void {
     // interpolate the camera target towards the player's position
     self.camera.target = rlm.vector2Lerp(self.camera.target, self.position, CameraSmoothing);
 
-    const bounds = self.calculateBounds();
-
     // limit the camera target to the bounds of the screen using the player's calculated bounds
     self.camera.target.x = rlm.clamp(self.camera.target.x, 0, GameState.FieldWidth);
     self.camera.target.y = rlm.clamp(self.camera.target.y, 0, GameState.FieldHeight);
 
-    // draw the player's hitbox
-    rl.drawRectangleV(
-        .{ .x = bounds.x, .y = bounds.y },
-        .{ .x = bounds.width, .y = bounds.height },
-        rl.Color.white,
-    );
-
     self.animation.draw(self.position);
-
-    rl.drawCircleV(self.position, 4, rl.Color.red);
-    rl.drawCircleV(.{ .x = bounds.x, .y = bounds.y }, 4, rl.Color.blue);
 }
 
 pub inline fn calculateBounds(self: *Self) rl.Rectangle {
@@ -221,5 +198,5 @@ fn loadAndShadeTexture(team: Team, skin_color: SkinColor) rl.Texture {
         copied.replaceColor(entry.value, color);
     }
 
-    return rl.Texture.fromImage(copied);
+    return copied.toTexture();
 }

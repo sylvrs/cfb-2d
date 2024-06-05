@@ -29,6 +29,8 @@ pub const JerseyType = enum { home, away, alternate };
 
 /// The team's name.
 name: [:0]const u8,
+/// The team's acronym.
+acronym: [:0]const u8,
 /// The team's primary color.
 primary_color: rl.Color,
 /// The team's secondary color.
@@ -40,26 +42,27 @@ conference: Conference,
 /// The team's current score.
 score: u32 = 0,
 /// The team's game site.
-site: GameSite = .away,
+site: GameSite = .home,
 
 pub const AllTeams = std.ComptimeStringMap(Self, .{
     // BIG 12 teams
-    mapInit("Baylor", 0x154734, 0xFFB81C, .big_12),
-    mapInit("BYU", 0x0062B8, 0xFFFFFF, .big_12),
-    mapInit("Iowa State", 0xC8102E, 0xF1BE48, .big_12),
-    mapInit("Kansas", 0x0051BA, 0xE8000D, .big_12),
-    mapInit("Kansas State", 0x512888, 0xD1D1D1, .big_12),
-    mapInit("Oklahoma State", 0xFF7300, 0x000000, .big_12),
-    mapInit("TCU", 0x4D1979, 0xC1C6C8, .big_12),
-    mapInit("Texas Tech", 0xCC0000, 0x000000, .big_12),
-    mapInit("West Virginia", 0x002855, 0xEAAA00, .big_12),
+    mapInit("Baylor", "BU", 0x154734, 0xFFB81C, .big_12),
+    mapInit("BYU", "BYU", 0x0062B8, 0xFFFFFF, .big_12),
+    mapInit("Iowa State", "ISU", 0xC8102E, 0xF1BE48, .big_12),
+    mapInit("Kansas", "KU", 0x0051BA, 0xE8000D, .big_12),
+    mapInit("Kansas State", "K-State", 0x512888, 0xD1D1D1, .big_12),
+    mapInit("Oklahoma State", "Oklahoma St", 0xFF7300, 0x000000, .big_12),
+    mapInit("TCU", "TCU", 0x4D1979, 0xC1C6C8, .big_12),
+    mapInit("Texas Tech", "TTU", 0xCC0000, 0x000000, .big_12),
+    mapInit("West Virginia", "WVU", 0x002855, 0xEAAA00, .big_12),
 });
 
 /// Initializes a team for the `AllTeams` map.
-inline fn mapInit(name: [:0]const u8, primary_color: u32, secondary_color: u32, conference: Conference) struct { []const u8, Self } {
+inline fn mapInit(name: [:0]const u8, acronym: [:0]const u8, primary_color: u32, secondary_color: u32, conference: Conference) struct { []const u8, Self } {
     return .{
         name, Self{
             .name = name,
+            .acronym = acronym,
             .primary_color = resolveColor(primary_color),
             .secondary_color = resolveColor(secondary_color),
             .jerseys = makeJerseysFromColors(primary_color, secondary_color),
@@ -80,8 +83,8 @@ inline fn makeJerseysFromColors(primary: u32, secondary: u32) std.EnumArray(Jers
             .secondary_color = resolveColor(primary),
         },
         .alternate = .{
-            .primary_color = resolveColor(secondary),
-            .secondary_color = resolveColor(primary),
+            .primary_color = resolveColor(primary),
+            .secondary_color = resolveColor(0xFFFFFF),
         },
     });
 }
@@ -97,7 +100,7 @@ inline fn resolveColor(hex: u32) rl.Color {
     };
 }
 
-/// Finds a team from the `AllTeams` map or returns `null` if the team does not exist.
+/// Finds a team from the `AllTeams` map or throws an `UnknownTeam` error if not found.
 pub fn find(name: [:0]const u8) !Self {
     return AllTeams.get(name) orelse error.UnknownTeam;
 }

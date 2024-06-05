@@ -29,6 +29,13 @@ pub fn drawCenteredFmtText(x: i32, y: i32, font_size: i32, color: rl.Color, comp
     drawCenteredText(text, x, y, font_size, color);
 }
 
+/// Draws text centered at the specified position.
+pub fn drawCenteredFmtTextPro(font: rl.Font, position: rl.Vector2, origin: rl.Vector2, rotation: f32, font_size: f32, spacing: f32, text_color: rl.Color, comptime buf_size: usize, comptime fmt: []const u8, args: anytype) std.fmt.BufPrintError!void {
+    var text_buf: [buf_size]u8 = undefined;
+    const text = try std.fmt.bufPrintZ(&text_buf, fmt, args);
+    drawCenteredTextPro(font, text, position, origin, rotation, font_size, spacing, text_color);
+}
+
 /// Formats and draws text with a background rectangle. Requires a comptime known buffer size.
 pub fn drawFmtTextWithBackground(x: i32, y: i32, font_size: i32, text_color: rl.Color, bg_color: rl.Color, comptime buf_size: usize, comptime fmt: []const u8, args: anytype) std.fmt.BufPrintError!void {
     var text_buf: [buf_size]u8 = undefined;
@@ -86,6 +93,18 @@ pub fn drawScaledTexture(texture: rl.Texture2D, pos_x: f32, pos_y: f32, scale: f
         texture,
         .{ .x = 0, .y = 0, .width = cIntToFloat(texture.width), .height = cIntToFloat(texture.height) },
         .{ .x = pos_x, .y = pos_y, .width = cIntToFloat(texture.width) * scale, .height = cIntToFloat(texture.height) * scale },
+        .{ .x = 0, .y = 0 },
+        0.0,
+        tint,
+    );
+}
+
+/// Centers and draws a texture at the specified position with the specified scale.
+pub fn drawCenteredScaledTexture(texture: rl.Texture2D, pos_x: f32, pos_y: f32, scale: f32, tint: rl.Color) void {
+    rl.drawTexturePro(
+        texture,
+        .{ .x = 0, .y = 0, .width = cIntToFloat(texture.width), .height = cIntToFloat(texture.height) },
+        .{ .x = pos_x - cIntToFloat(texture.width) * scale / 2, .y = pos_y - cIntToFloat(texture.height) * scale / 2, .width = cIntToFloat(texture.width) * scale, .height = cIntToFloat(texture.height) * scale },
         .{ .x = 0, .y = 0 },
         0.0,
         tint,
