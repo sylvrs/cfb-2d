@@ -11,6 +11,8 @@ const Scorebug = @import("../Scorebug.zig");
 
 const Self = @This();
 
+const QuarterLength = 60 * 1;
+
 /// The team that is hosting the game.
 home_team: Team,
 /// The team that is visiting the game.
@@ -18,7 +20,7 @@ away_team: Team,
 /// The current quarter of the game.
 quarter: u8 = 1,
 /// The time remaining in the current quarter.
-time_remaining: u32 = 60 * 15,
+time_remaining: u32 = QuarterLength,
 /// The time remaining in the current playclock.
 playclock: u8 = 40,
 /// The current down of the drive.
@@ -88,9 +90,14 @@ pub fn update(self: *Self) !void {
 pub fn tick(self: *Self) !void {
     self.time_remaining -= 1;
     if (self.time_remaining == 0) {
-        self.time_remaining = 60 * 15;
+        self.time_remaining = QuarterLength;
         self.quarter += 1;
     }
+
+    // self.playclock -= 1;
+    // if (self.playclock == 0) {
+    //     self.playclock = 40;
+    // }
 }
 
 /// Draws the game scene.
