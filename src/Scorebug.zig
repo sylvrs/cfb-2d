@@ -70,7 +70,7 @@ inline fn drawPlayClock(self: *Self, game: *GameScene) !void {
         scaleAndDivide(self.texture.height, 5),
         rl.Color.yellow,
         4,
-        "{d}",
+        "{d:0>2}",
         .{game.playclock},
     );
 }
@@ -131,7 +131,7 @@ inline fn drawClock(self: *Self, game: *GameScene) !void {
         scaleAndDivide(self.texture.height, 5),
         rl.Color.white,
         8,
-        "{d:0<2}:{d:0<2}",
+        "{d:0>2}:{d:0>2}",
         .{ game.time_remaining / 60, game.time_remaining % 60 },
     );
 }
