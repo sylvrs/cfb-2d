@@ -11,7 +11,7 @@ const Scorebug = @import("../Scorebug.zig");
 
 const Self = @This();
 
-const QuarterLength = 60 * 1;
+const QuarterLength = 60 * 5;
 
 /// The team that is hosting the game.
 home_team: Team,
