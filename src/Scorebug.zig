@@ -109,7 +109,7 @@ inline fn drawDown(self: *Self, game: *GameScene) !void {
     const font_size = scaleAndDivide(self.texture.height, 5);
 
     var text_buf: [16]u8 = undefined;
-    const text = try std.fmt.bufPrintZ(&text_buf, "{d}{s} & {d}", .{ game.quarter, numberToOrdinal(game.quarter), game.yards_to_go });
+    const text = try std.fmt.bufPrintZ(&text_buf, "{d}{s} & {d}", .{ game.current_down, numberToOrdinal(game.current_down), game.yards_to_go });
     const text_width = rl.measureText(text, font_size);
     rl.drawText(
         text,
