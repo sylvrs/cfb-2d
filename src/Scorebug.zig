@@ -68,7 +68,10 @@ inline fn drawPlayClock(self: *Self, game: *GameScene) !void {
         midpointWidth() - scaleAndDivide(width_diff, 5),
         rl.getScreenHeight() - 20,
         scaleAndDivide(self.texture.height, 5),
-        rl.Color.yellow,
+        switch (game.playclock) {
+            0...5 => rl.Color.red,
+            else => rl.Color.yellow,
+        },
         4,
         "{d:0>2}",
         .{game.playclock},
