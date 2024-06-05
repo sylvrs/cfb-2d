@@ -10,5 +10,6 @@ This project is meant to be a learning experience while providing a free, open s
 
 ## Screenshots
 
-![Basic Prototype](images/basic.png)
-![Color Rush](images/color_rush.png)
+![Home](images/home.png)
+![Away](images/away.png)
+![Oklahoma State](images/oklahoma_state.png)
