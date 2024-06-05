@@ -14,9 +14,9 @@ const Self = @This();
 /// The scale factor to use for the game.
 pub const Scale = 2;
 /// The starting width of the window (predefined as the size of the field by the scale factor)
-pub const ScreenWidth = 720 * Scale;
+pub const FieldWidth = 720 * Scale;
 /// The starting height of the window. (predefined as the size of the field by the scale factor)
-pub const ScreenHeight = 320 * Scale;
+pub const FieldHeight = 320 * Scale;
 /// The title of the window.
 pub const Title = "College Ball";
 /// The period, in seconds, between each update of the window title.
@@ -89,8 +89,8 @@ pub fn setScene(self: *Self, scene: SceneState) !void {
     switch (scene) {
         .main_menu => try self.setupScene(MainMenuScene.init(self.allocator, self)),
         .game => try self.setupScene(GameScene.init(Scale, rl.Vector2{
-            .x = @divExact(ScreenWidth, Scale),
-            .y = @divExact(ScreenHeight, Scale),
+            .x = @divExact(FieldWidth, Scale),
+            .y = @divExact(FieldHeight, Scale),
         }, [_]Team{ Team.random(), Team.random() })),
         .options => try self.setupScene(OptionsScene.init(self.allocator, self)),
     }

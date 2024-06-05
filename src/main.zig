@@ -3,7 +3,7 @@ const rl = @import("raylib");
 const Color = rl.Color;
 
 const Field = @import("Field.zig");
-const Player = @import("Player.zig");
+const Player = @import("player/Player.zig");
 const utils = @import("utils.zig");
 const Scene = @import("Scene.zig");
 
@@ -14,7 +14,7 @@ pub fn main() anyerror!void {
     const allocator = std.heap.page_allocator;
     rl.setConfigFlags(.flag_vsync_hint);
     rl.setExitKey(.key_null);
-    rl.initWindow(GameState.ScreenWidth, GameState.ScreenHeight, GameState.Title);
+    rl.initWindow(GameState.FieldWidth, GameState.FieldHeight, GameState.Title);
     defer rl.closeWindow();
     rl.setWindowState(.flag_window_resizable);
 

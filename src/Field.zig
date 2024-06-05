@@ -8,8 +8,8 @@ const Self = @This();
 
 const EndzoneText = struct {
     const Bounds = [_]struct { x: f32, y: f32, rotation: f32 }{
-        .{ .x = 70, .y = GameState.ScreenHeight / 2, .rotation = 270 },
-        .{ .x = GameState.ScreenWidth - 70, .y = GameState.ScreenHeight / 2, .rotation = 90 },
+        .{ .x = 70, .y = GameState.FieldHeight / 2, .rotation = 270 },
+        .{ .x = GameState.FieldWidth - 70, .y = GameState.FieldHeight / 2, .rotation = 90 },
     };
     const BaseScale = 64;
     const BaseSpacing = 96;

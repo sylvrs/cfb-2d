@@ -1,9 +1,11 @@
 const std = @import("std");
 const rl = @import("raylib");
 const rlm = @import("raylib-math");
-const utils = @import("utils.zig");
-const Animation = @import("./engine/Animation.zig");
-const Team = @import("Team.zig");
+const utils = @import("../utils.zig");
+const GameState = @import("../GameState.zig");
+const Animation = @import("../engine/Animation.zig");
+const Hitbox = @import("../engine/Hitbox.zig");
+const Team = @import("../Team.zig");
 
 const Self = @This();
 const CameraSmoothing = 0.15;
@@ -46,6 +48,8 @@ const AnimationType = enum(u8) {
 camera: rl.Camera2D,
 /// The player's position.
 position: rl.Vector2,
+/// The player's hitbox.
+hitbox: Hitbox,
 /// The player's speed.
 speed: f32 = BaseSpeed,
 /// The player's team.
@@ -71,6 +75,7 @@ pub fn init(position: rl.Vector2, zoom: f32, team: Team, skin_color: SkinColor) 
             .zoom = zoom,
         },
         .position = position,
+        .hitbox = Hitbox{ .width = 14, .height = 20 },
         .team = team,
         .skin_color = skin_color,
         .animation = Animation.init(
@@ -87,6 +92,13 @@ pub fn deinit(self: *Self) void {
     self.animation.deinit();
 }
 
+/// Sets the player's team & updates the player's texture.
+pub fn setTeam(self: *Self, team: Team) void {
+    self.team = team;
+    self.animation.texture = loadAndShadeTexture(team, self.skin_color);
+    utils.fmtTrace(.log_info, 64, "New Team: {s}", .{self.team.name}) catch unreachable;
+}
+
 /// Updates the player.
 pub fn update(self: *Self) void {
     // update the player's speed based on input
@@ -97,9 +109,12 @@ pub fn update(self: *Self) void {
 
     // debug key to change the player's team
     if (rl.isKeyDown(.key_t) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_up)) {
-        self.team = Team.random();
-        self.animation.texture = loadAndShadeTexture(self.team, self.skin_color);
-        utils.fmtTrace(.log_info, 64, "New Team: {s}", .{self.team.name}) catch unreachable;
+        self.setTeam(Team.random());
+    }
+
+    if (rl.isKeyDown(.key_y) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_right)) {
+        self.team.site = if (self.team.site == .home) .away else .home;
+        self.setTeam(self.team);
     }
 
     // move the player based on input
@@ -116,9 +131,16 @@ pub fn update(self: *Self) void {
         self.position.x += self.speed;
     }
 
-    // limit the player's position to the bounds of the screen
-    self.position.x = rlm.clamp(self.position.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())) - self.animation.width());
-    self.position.y = rlm.clamp(self.position.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())) - self.animation.height());
+    // limit the player's position to the field
+    var bounds = self.calculateBounds();
+
+    // clamp the bounds to the field
+    bounds.x = rlm.clamp(bounds.x, 0, GameState.FieldWidth - bounds.width);
+    bounds.y = rlm.clamp(bounds.y, 0, GameState.FieldHeight - bounds.height);
+
+    // set the position based on the bounds & hitbox
+    self.position.x = bounds.x - @as(f32, @floatFromInt(self.hitbox.width * PlayerScale)) / 2.0;
+    self.position.y = bounds.y - @as(f32, @floatFromInt(self.hitbox.height * PlayerScale)) / 2.0;
 
     self.animation.update();
 }
@@ -138,15 +160,46 @@ pub fn endCamera(self: *Self) void {
     self.camera.end();
 }
 
+/// Centers the camera on the player based on the screen size.
+fn centerCamera(self: *Self) void {
+    self.camera.offset = .{
+        .x = @as(f32, @floatFromInt(rl.getRenderWidth())) / 2.0,
+        .y = @as(f32, @floatFromInt(rl.getRenderHeight())) / 2.0,
+    };
+}
+
 pub fn draw(self: *Self) void {
+    // center the camera on the screen
+    self.centerCamera();
     // interpolate the camera target towards the player's position
     self.camera.target = rlm.vector2Lerp(self.camera.target, self.position, CameraSmoothing);
 
-    // limit the camera target to the bounds of the screen
-    self.camera.target.x = rlm.clamp(self.camera.target.x, 0.0, @as(f32, @floatFromInt(rl.getRenderWidth())));
-    self.camera.target.y = rlm.clamp(self.camera.target.y, 0.0, @as(f32, @floatFromInt(rl.getRenderHeight())));
+    const bounds = self.calculateBounds();
+
+    // limit the camera target to the bounds of the screen using the player's calculated bounds
+    self.camera.target.x = rlm.clamp(self.camera.target.x, 0, GameState.FieldWidth);
+    self.camera.target.y = rlm.clamp(self.camera.target.y, 0, GameState.FieldHeight);
+
+    // draw the player's hitbox
+    rl.drawRectangleV(
+        .{ .x = bounds.x, .y = bounds.y },
+        .{ .x = bounds.width, .y = bounds.height },
+        rl.Color.white,
+    );
 
     self.animation.draw(self.position);
+
+    rl.drawCircleV(self.position, 4, rl.Color.red);
+    rl.drawCircleV(.{ .x = bounds.x, .y = bounds.y }, 4, rl.Color.blue);
+}
+
+pub inline fn calculateBounds(self: *Self) rl.Rectangle {
+    return .{
+        .x = self.position.x + @as(f32, @floatFromInt(self.hitbox.width * PlayerScale)) / 2.0,
+        .y = self.position.y + @as(f32, @floatFromInt(self.hitbox.height * PlayerScale)) / 2.0,
+        .width = @floatFromInt(self.hitbox.width * PlayerScale),
+        .height = @floatFromInt(self.hitbox.height * PlayerScale),
+    };
 }
 
 /// Loads the player's texture and shades it based on the team & skin color
