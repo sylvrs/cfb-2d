@@ -95,9 +95,7 @@ pub fn tick(self: *Self) !void {
     }
 
     // self.playclock -= 1;
-    // if (self.playclock == 0) {
-    //     self.playclock = 40;
-    // }
+    // if (self.playclock == 0) { }
 }
 
 /// Draws the game scene.
