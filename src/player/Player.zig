@@ -8,7 +8,6 @@ const Hitbox = @import("../engine/Hitbox.zig");
 const Team = @import("../Team.zig");
 
 const Self = @This();
-const CameraSmoothing = 0.15;
 
 const PlayerScale = 2;
 
@@ -44,8 +43,6 @@ const AnimationType = enum(u8) {
     run = 2,
 };
 
-/// The camera following the player.
-camera: rl.Camera2D,
 /// The player's position.
 position: rl.Vector2,
 /// The player's hitbox.
@@ -62,24 +59,14 @@ animation: Animation,
 current_animation: AnimationType = .idle,
 
 /// Creates a new player.
-pub fn init(position: rl.Vector2, zoom: f32, team: Team, skin_color: SkinColor) Self {
+pub fn init(position: rl.Vector2, team: Team, team_state: Team.State, skin_color: SkinColor) Self {
     return .{
-        .camera = .{
-            // center the camera on the screen
-            .offset = .{
-                .x = @as(f32, @floatFromInt(rl.getRenderWidth())) / 2.0,
-                .y = @as(f32, @floatFromInt(rl.getRenderHeight())) / 2.0,
-            },
-            .target = position,
-            .rotation = 0.0,
-            .zoom = zoom,
-        },
         .position = position,
         .hitbox = Hitbox{ .width = 14, .height = 20 },
         .team = team,
         .skin_color = skin_color,
         .animation = Animation.init(
-            loadAndShadeTexture(team, skin_color),
+            loadAndShadeTexture(team, team_state, skin_color),
             1.25,
             AnimationSize,
             PlayerScale,
@@ -93,9 +80,9 @@ pub fn deinit(self: *Self) void {
 }
 
 /// Sets the player's team & updates the player's texture.
-pub fn setTeam(self: *Self, team: Team) void {
+pub fn setTeam(self: *Self, team: Team, team_state: Team.State) void {
     self.team = team;
-    self.animation.texture = loadAndShadeTexture(team, self.skin_color);
+    self.animation.texture = loadAndShadeTexture(team, team_state, self.skin_color);
 }
 
 /// Updates the player.
@@ -134,39 +121,8 @@ pub fn update(self: *Self) void {
     self.animation.update();
 }
 
-/// Updates the camera's zoom
-pub fn setZoom(self: *Self, zoom: f32) void {
-    self.camera.zoom = zoom;
-}
-
-/// Indicates the camera to start following the player.
-pub fn startCamera(self: *Self) void {
-    self.camera.begin();
-}
-
-/// Indicates the camera to stop following the player.
-pub fn endCamera(self: *Self) void {
-    self.camera.end();
-}
-
-/// Centers the camera on the player based on the screen size.
-fn centerCamera(self: *Self) void {
-    self.camera.offset = .{
-        .x = @as(f32, @floatFromInt(rl.getRenderWidth())) / 2.0,
-        .y = @as(f32, @floatFromInt(rl.getRenderHeight())) / 2.0,
-    };
-}
-
+/// Draws the player.
 pub fn draw(self: *Self) void {
-    // center the camera on the screen
-    self.centerCamera();
-    // interpolate the camera target towards the player's position
-    self.camera.target = rlm.vector2Lerp(self.camera.target, self.position, CameraSmoothing);
-
-    // limit the camera target to the bounds of the screen using the player's calculated bounds
-    self.camera.target.x = rlm.clamp(self.camera.target.x, 0, GameState.FieldWidth);
-    self.camera.target.y = rlm.clamp(self.camera.target.y, 0, GameState.FieldHeight);
-
     self.animation.draw(self.position);
 }
 
@@ -179,14 +135,18 @@ pub inline fn calculateBounds(self: *Self) rl.Rectangle {
     };
 }
 
+/// The player's texture.
+var player_image: ?rl.Image = null;
+
 /// Loads the player's texture and shades it based on the team & skin color
-fn loadAndShadeTexture(team: Team, skin_color: SkinColor) rl.Texture {
-    var image = rl.loadImage("assets/player.png");
-    defer image.unload();
-    var copied = image.copy();
+fn loadAndShadeTexture(team: Team, team_state: Team.State, skin_color: SkinColor) rl.Texture {
+    if (player_image == null) {
+        player_image = rl.loadImage("assets/player.png");
+    }
+    var copied = player_image.?.copy();
     defer copied.unload();
 
-    const jersey = team.fetchJersey(if (team.site == .home) .home else .away);
+    const jersey = team.fetchJersey(if (team_state.site == .home) .home else .away);
     inline for (ColorReplacementMap.kvs) |entry| {
         const color = if (std.mem.eql(u8, entry.key, "primary_color"))
             jersey.primary_color

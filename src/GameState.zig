@@ -85,11 +85,11 @@ pub fn draw(self: *Self) anyerror!void {
     try self.current_scene.?.draw();
 }
 
+/// Set the scene given the scene state.
 pub fn setScene(self: *Self, scene: SceneState) !void {
     switch (scene) {
         .main_menu => try self.setupScene(MainMenuScene.init(self.allocator, self)),
         .game => try self.setupScene(GameScene.init(
-            Scale,
             rl.Vector2{
                 .x = @divExact(FieldWidth, Scale),
                 .y = @divExact(FieldHeight, Scale),
@@ -102,7 +102,7 @@ pub fn setScene(self: *Self, scene: SceneState) !void {
 }
 
 /// Setups the scene with the given setup function
-fn setupScene(self: *Self, scene: anytype) !void {
+pub fn setupScene(self: *Self, scene: anytype) !void {
     self.last_scene = self.current_scene;
     const T = @TypeOf(scene);
     var created_scene = try self.allocator.create(T);

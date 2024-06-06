@@ -27,6 +27,12 @@ pub const Jersey = struct {
 
 pub const JerseyType = enum { home, away, alternate };
 
+/// A team state that is used in game
+pub const State = struct {
+    score: u32 = 0,
+    site: GameSite,
+};
+
 /// The team's name.
 name: [:0]const u8,
 /// The team's acronym.
@@ -39,10 +45,6 @@ secondary_color: rl.Color,
 jerseys: std.EnumArray(JerseyType, Jersey),
 /// The team's conference.
 conference: Conference,
-/// The team's current score.
-score: u32 = 0,
-/// The team's game site.
-site: GameSite = .home,
 
 pub const AllTeams = std.ComptimeStringMap(Self, .{
     // BIG 12 teams

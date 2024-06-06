@@ -140,7 +140,7 @@ inline fn drawClock(self: *Self, game: *GameScene) !void {
 }
 
 /// Draws the score for the given team at the given x offset.
-inline fn drawScore(self: *Self, team: Team, alignment: Alignment) !void {
+inline fn drawScore(self: *Self, team_state: Team.State, alignment: Alignment) !void {
     const width_diff: i32 = @intFromFloat(Offset * scaleByType(f32, self.texture.height));
 
     try utils.drawFmtText(
@@ -153,7 +153,7 @@ inline fn drawScore(self: *Self, team: Team, alignment: Alignment) !void {
         rl.Color.white,
         4,
         "{d}",
-        .{team.score},
+        .{team_state.score},
     );
 }
 
@@ -229,13 +229,13 @@ inline fn midpointWidth() i32 {
 
 /// Draws the home team's HUD elements.
 inline fn drawHomeHud(self: *Self, game: *GameScene) !void {
-    try self.drawScore(game.home_team, .left);
+    try self.drawScore(game.home_team_state, .left);
     try self.drawTeamName(game.home_team, .right);
 }
 
 /// Draws the away team's HUD elements.
 inline fn drawAwayHud(self: *Self, game: *GameScene) !void {
-    try self.drawScore(game.away_team, .right);
+    try self.drawScore(game.away_team_state, .right);
     try self.drawTeamName(game.away_team, .left);
 }
 
@@ -253,11 +253,14 @@ pub fn setAwayTeam(self: *Self, team: Team) void {
     self.texture = createReplacedTexture(self.home_team, team);
 }
 
+var scorebug_image: ?rl.Image = null;
+
 /// Creates a new scorebug texture with the given teams.
 fn createReplacedTexture(home_team: Team, away_team: Team) rl.Texture {
-    const image = rl.loadImage("assets/scorebug.png");
-    defer image.unload();
-    var copied = image.copy();
+    if (scorebug_image == null) {
+        scorebug_image = rl.loadImage("assets/scorebug.png");
+    }
+    var copied = scorebug_image.?.copy();
     defer copied.unload();
 
     copied.replaceColor(ReplaceMap.get("home_team").?, home_team.primary_color);
