@@ -41,6 +41,8 @@ acronym: [:0]const u8,
 primary_color: rl.Color,
 /// The team's secondary color.
 secondary_color: rl.Color,
+/// The team's custom field color (if applicable).
+field_color: ?rl.Color = null,
 /// The team's list of jerseys.
 jerseys: std.EnumArray(JerseyType, Jersey),
 /// The team's conference.
@@ -48,25 +50,32 @@ conference: Conference,
 
 pub const AllTeams = std.ComptimeStringMap(Self, .{
     // BIG 12 teams
-    mapInit("Baylor", "BU", 0x154734, 0xFFB81C, .big_12),
-    mapInit("BYU", "BYU", 0x0062B8, 0xFFFFFF, .big_12),
-    mapInit("Iowa State", "ISU", 0xC8102E, 0xF1BE48, .big_12),
-    mapInit("Kansas", "KU", 0x0051BA, 0xE8000D, .big_12),
-    mapInit("Kansas State", "K-State", 0x512888, 0xD1D1D1, .big_12),
-    mapInit("Oklahoma State", "Oklahoma St", 0xFF7300, 0x000000, .big_12),
-    mapInit("TCU", "TCU", 0x4D1979, 0xC1C6C8, .big_12),
-    mapInit("Texas Tech", "TTU", 0xCC0000, 0x000000, .big_12),
-    mapInit("West Virginia", "WVU", 0x002855, 0xEAAA00, .big_12),
+    mapInit("Baylor", "BU", .big_12, 0x154734, 0xFFB81C, .{}),
+    mapInit("BYU", "BYU", .big_12, 0x0062B8, 0xFFFFFF, .{}),
+    mapInit("Iowa State", "ISU", .big_12, 0xC8102E, 0xF1BE48, .{}),
+    mapInit("Kansas", "KU", .big_12, 0x0051BA, 0xE8000D, .{}),
+    mapInit("Kansas State", "K-State", .big_12, 0x512888, 0xD1D1D1, .{}),
+    mapInit("Oklahoma State", "Oklahoma St", .big_12, 0xFF7300, 0x000000, .{}),
+    mapInit("TCU", "TCU", .big_12, 0x4D1979, 0xC1C6C8, .{}),
+    mapInit("Texas Tech", "TTU", .big_12, 0xCC0000, 0x000000, .{}),
+    mapInit("West Virginia", "WVU", .big_12, 0x002855, 0xEAAA00, .{}),
+    // MWC teams
+    mapInit("Boise State", "Boise St", .mwc, 0xD64309, 0x0033A0, .{ .field_color = 0x0033A0 }),
 });
 
+const MapOptions = struct {
+    field_color: ?u32 = null,
+};
+
 /// Initializes a team for the `AllTeams` map.
-inline fn mapInit(name: [:0]const u8, acronym: [:0]const u8, primary_color: u32, secondary_color: u32, conference: Conference) struct { []const u8, Self } {
+inline fn mapInit(name: [:0]const u8, acronym: [:0]const u8, conference: Conference, primary_color: u32, secondary_color: u32, options: MapOptions) struct { []const u8, Self } {
     return .{
         name, Self{
             .name = name,
             .acronym = acronym,
             .primary_color = resolveColor(primary_color),
             .secondary_color = resolveColor(secondary_color),
+            .field_color = if (options.field_color) |color| resolveColor(color) else null,
             .jerseys = makeJerseysFromColors(primary_color, secondary_color),
             .conference = conference,
         },

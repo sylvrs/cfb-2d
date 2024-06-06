@@ -38,7 +38,7 @@ pub fn setup(self: *Self) !void {
         .y = @divFloor(rl.getScreenHeight(), 2),
         .width = 200,
         .height = 50,
-        .onClickFn = onPlayClick,
+        .onClickFn = onExhibitionClick,
         .context = @ptrCast(self),
     });
     try self.menu.addElement(ui.Button{
@@ -49,12 +49,7 @@ pub fn setup(self: *Self) !void {
         .y = @divFloor(rl.getScreenHeight(), 2) + 75,
         .width = 200,
         .height = 50,
-        .onClickFn = struct {
-            pub fn onClick(erased_scene: *anyopaque) anyerror!void {
-                const menu_scene = utils.alignAndCast(Self, erased_scene);
-                try menu_scene.game_state.setScene(.options);
-            }
-        }.onClick,
+        .onClickFn = onOptionsClick,
         .context = @ptrCast(self),
     });
 }
@@ -72,10 +67,16 @@ pub fn draw(self: *Self) anyerror!void {
     try self.menu.draw();
 }
 
-/// Called when the play button is clicked.
-pub fn onPlayClick(erased_self: *anyopaque) anyerror!void {
+/// Called when the exhibition button is clicked.
+pub fn onExhibitionClick(erased_self: *anyopaque) anyerror!void {
     const self = utils.alignAndCast(Self, erased_self);
     try self.game_state.setScene(.game);
+}
+
+/// Called when the options button is clicked.
+pub fn onOptionsClick(erased_scene: *anyopaque) anyerror!void {
+    const menu_scene = utils.alignAndCast(Self, erased_scene);
+    try menu_scene.game_state.setScene(.options);
 }
 
 /// Returns a scene object for the MainMenu scene.

@@ -6,6 +6,7 @@ const Team = @import("Team.zig");
 
 /// The scenes that the game can switch between.
 const MainMenuScene = @import("scenes/MainMenuScene.zig");
+const ExhibitionScene = @import("scenes/ExhibitionScene.zig");
 const GameScene = @import("scenes/GameScene.zig");
 const OptionsScene = @import("scenes/OptionsScene.zig");
 
@@ -25,6 +26,7 @@ const TitleUpdatePeriod = 0.01;
 /// The different scenes that the game can be in.
 const SceneState = enum {
     main_menu,
+    exhibition,
     game,
     options,
 };
@@ -89,6 +91,7 @@ pub fn draw(self: *Self) anyerror!void {
 pub fn setScene(self: *Self, scene: SceneState) !void {
     switch (scene) {
         .main_menu => try self.setupScene(MainMenuScene.init(self.allocator, self)),
+        .exhibition => try self.setupScene(ExhibitionScene.init(self.allocator)),
         .game => try self.setupScene(GameScene.init(
             rl.Vector2{
                 .x = @divExact(FieldWidth, Scale),

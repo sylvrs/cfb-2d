@@ -16,6 +16,8 @@ const EndzoneText = struct {
     const BrightnessFactor = 0.75;
 };
 
+const BaseTint = rl.Color.lime;
+
 /// The texture of the base field
 base_texture: rl.Texture2D,
 /// The texture of the field markers
@@ -36,7 +38,7 @@ pub fn init(scale: f32, home_team: Team) Self {
         .base_texture = rl.loadTexture("assets/field_base.png"),
         .markers_texture = rl.loadTexture("assets/field_markers.png"),
         .endzones_texture = rl.loadTexture("assets/field_endzones.png"),
-        .base_tint = rl.Color.lime,
+        .base_tint = BaseTint,
         .endzone_text = rl.textToUpper(home_team.name),
         // randomize the endzone tint
         .endzones_tint = home_team.primary_color,
@@ -58,6 +60,7 @@ pub fn setScale(self: *Self, scale: f32) void {
 /// Sets the team of the field
 pub fn setTeam(self: *Self, team: Team) void {
     self.endzones_tint = team.primary_color;
+    self.base_tint = if (team.field_color) |color| color else BaseTint;
     self.endzone_text = team.name;
 }
 
