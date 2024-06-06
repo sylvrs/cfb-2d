@@ -4,8 +4,8 @@ const rl = @import("raylib");
 
 const Self = @This();
 
-/// The team's conference.
-pub const Conference = enum {
+/// The FBS conferences.
+pub const FBSConference = enum {
     big_12,
     big_ten,
     sec,
@@ -15,6 +15,30 @@ pub const Conference = enum {
     sun_belt,
     aac,
     cusa,
+    independents,
+};
+
+pub const FCSConference = enum {
+    big_sky,
+    big_south,
+    caa,
+    independent,
+    meac,
+    mvfc,
+    nec,
+    ovc,
+    patriot,
+    pioneer,
+    socon,
+    southland,
+    swac,
+    united,
+    ivy,
+};
+
+pub const Division = union(enum) {
+    fbs: FBSConference,
+    fcs: FCSConference,
 };
 
 pub const GameSite = enum { home, away };
@@ -43,32 +67,53 @@ primary_color: rl.Color,
 secondary_color: rl.Color,
 /// The team's custom field color (if applicable).
 field_color: ?rl.Color = null,
+/// The team's custom endzone color (if applicable).
+endzone_color: ?rl.Color = null,
 /// The team's list of jerseys.
 jerseys: std.EnumArray(JerseyType, Jersey),
-/// The team's conference.
-conference: Conference,
+/// The team's division (holds both division and conference).
+division: Division,
 
 pub const AllTeams = std.ComptimeStringMap(Self, .{
+    // -- FBS
     // BIG 12 teams
-    mapInit("Baylor", "BU", .big_12, 0x154734, 0xFFB81C, .{}),
-    mapInit("BYU", "BYU", .big_12, 0x0062B8, 0xFFFFFF, .{}),
-    mapInit("Iowa State", "ISU", .big_12, 0xC8102E, 0xF1BE48, .{}),
-    mapInit("Kansas", "KU", .big_12, 0x0051BA, 0xE8000D, .{}),
-    mapInit("Kansas State", "K-State", .big_12, 0x512888, 0xD1D1D1, .{}),
-    mapInit("Oklahoma State", "Oklahoma St", .big_12, 0xFF7300, 0x000000, .{}),
-    mapInit("TCU", "TCU", .big_12, 0x4D1979, 0xC1C6C8, .{}),
-    mapInit("Texas Tech", "TTU", .big_12, 0xCC0000, 0x000000, .{}),
-    mapInit("West Virginia", "WVU", .big_12, 0x002855, 0xEAAA00, .{}),
+    fbsInit("Baylor", "BU", .big_12, 0x154734, 0xFFB81C, .{}),
+    fbsInit("BYU", "BYU", .big_12, 0x0062B8, 0xFFFFFF, .{}),
+    fbsInit("Iowa State", "ISU", .big_12, 0xC8102E, 0xF1BE48, .{}),
+    fbsInit("Kansas", "KU", .big_12, 0x0051BA, 0xE8000D, .{}),
+    fbsInit("Kansas State", "K-State", .big_12, 0x512888, 0xD1D1D1, .{}),
+    fbsInit("Oklahoma State", "Oklahoma St", .big_12, 0xFF7300, 0x000000, .{}),
+    fbsInit("TCU", "TCU", .big_12, 0x4D1979, 0xC1C6C8, .{}),
+    fbsInit("Texas Tech", "TTU", .big_12, 0xCC0000, 0x000000, .{}),
+    fbsInit("West Virginia", "WVU", .big_12, 0x002855, 0xEAAA00, .{}),
     // MWC teams
-    mapInit("Boise State", "Boise St", .mwc, 0xD64309, 0x0033A0, .{ .field_color = 0x0033A0 }),
+    fbsInit("Boise State", "Boise St", .mwc, 0xD64309, 0x0033A0, .{ .field_color = 0x0033A0 }),
+    // SBC teams
+    fbsInit("Coastal Carolina", "Coastal", .sun_belt, 0x006F71, 0xA27752, .{ .field_color = 0x006F71, .endzone_color = 0xA27752 }),
+    // -- FCS
+    // Big Sky teams
+    fcsInit("Eastern Washington", "EWU", .big_sky, 0xA10022, 0x000000, .{ .field_color = 0xA10022, .endzone_color = 0x000000 }),
 });
 
 const MapOptions = struct {
+    /// The custom field color.
     field_color: ?u32 = null,
+    /// The custom endzone color.
+    endzone_color: ?u32 = null,
 };
 
+/// Initializes an FBS team for the `AllTeams` map.
+inline fn fbsInit(name: [:0]const u8, acronym: [:0]const u8, conference: FBSConference, primary_color: u32, secondary_color: u32, options: MapOptions) struct { []const u8, Self } {
+    return mapInit(name, acronym, .{ .fbs = conference }, primary_color, secondary_color, options);
+}
+
+/// Initializes an FCS team for the `AllTeams` map.
+inline fn fcsInit(name: [:0]const u8, acronym: [:0]const u8, conference: FCSConference, primary_color: u32, secondary_color: u32, options: MapOptions) struct { []const u8, Self } {
+    return mapInit(name, acronym, .{ .fcs = conference }, primary_color, secondary_color, options);
+}
+
 /// Initializes a team for the `AllTeams` map.
-inline fn mapInit(name: [:0]const u8, acronym: [:0]const u8, conference: Conference, primary_color: u32, secondary_color: u32, options: MapOptions) struct { []const u8, Self } {
+inline fn mapInit(name: [:0]const u8, acronym: [:0]const u8, division: Division, primary_color: u32, secondary_color: u32, options: MapOptions) struct { []const u8, Self } {
     return .{
         name, Self{
             .name = name,
@@ -76,8 +121,9 @@ inline fn mapInit(name: [:0]const u8, acronym: [:0]const u8, conference: Confere
             .primary_color = resolveColor(primary_color),
             .secondary_color = resolveColor(secondary_color),
             .field_color = if (options.field_color) |color| resolveColor(color) else null,
+            .endzone_color = if (options.endzone_color) |color| resolveColor(color) else null,
             .jerseys = makeJerseysFromColors(primary_color, secondary_color),
-            .conference = conference,
+            .division = division,
         },
     };
 }
