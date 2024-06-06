@@ -36,7 +36,7 @@ pub fn init(scale: f32, home_team: Team) Self {
         .base_texture = rl.loadTexture("assets/field_base.png"),
         .markers_texture = rl.loadTexture("assets/field_markers.png"),
         .endzones_texture = rl.loadTexture("assets/field_endzones.png"),
-        .base_tint = rl.Color.dark_green,
+        .base_tint = rl.Color.lime,
         .endzone_text = rl.textToUpper(home_team.name),
         // randomize the endzone tint
         .endzones_tint = home_team.primary_color,
