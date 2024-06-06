@@ -31,7 +31,7 @@ pub fn deinit(self: *Self) void {
 /// Sets up the buttons for the MainMenu scene.
 pub fn setup(self: *Self) !void {
     try self.menu.addElement(ui.Button{
-        .text = "Play",
+        .text = "Exhibition",
         .bg_color = rl.Color.maroon,
         .text_color = rl.Color.white,
         .x = @divFloor(rl.getScreenWidth(), 2),
