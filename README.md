@@ -15,10 +15,15 @@ This game is still extremely early in development but has plans for the followin
 - [ ] Road to Glory
 - [ ] Dynasty
 
+### Team
+- [ ] Customizable Uniforms
+- [ ] Team Builder
+
+### UI
+- [ ] Custom Scorebugs
+
 ### Misc
 - [x] Gamepad Support
-- [ ] Custom Scorebugs
-- [ ] Team Builder
 
 ## Screenshots
 
