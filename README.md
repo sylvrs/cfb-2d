@@ -31,3 +31,9 @@ This game is still extremely early in development but has plans for the followin
 ![Home](images/home.png)
 ![Away](images/away.png)
 ![Oklahoma State](images/oklahoma_state.png)
+
+## Building / Running
+This project can be built & ran with the CLI command:
+```
+zig build run
+```
