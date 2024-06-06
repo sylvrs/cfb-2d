@@ -11,14 +11,14 @@ This project is meant to be a learning experience while providing a free, open s
 This game is still extremely early in development but has plans for the following:
 
 ### Gamemodes
-[ ] Exhibition
-[ ] Road to Glory
-[ ] Dynasty
+- [ ] Exhibition
+- [ ] Road to Glory
+- [ ] Dynasty
 
 ### Misc
-[x] Gamepad Support
-[ ] Custom Scorebugs
-[ ] Team Builder
+- [x] Gamepad Support
+- [ ] Custom Scorebugs
+- [ ] Team Builder
 
 ## Screenshots
 
