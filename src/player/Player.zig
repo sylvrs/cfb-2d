@@ -87,26 +87,6 @@ pub fn setTeam(self: *Self, team: Team, team_state: Team.State) void {
 
 /// Updates the player.
 pub fn update(self: *Self) void {
-    // update the player's speed based on input
-    self.speed = if (rl.isKeyDown(.key_left_shift) or rl.isGamepadButtonDown(0, .gamepad_button_right_trigger_2))
-        rlm.lerp(self.speed, MaxSpeed, Acceleration)
-    else
-        rlm.lerp(self.speed, BaseSpeed, Acceleration);
-
-    // move the player based on input
-    if (rl.isKeyDown(.key_w) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_up)) {
-        self.position.y -= self.speed;
-    }
-    if (rl.isKeyDown(.key_s) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_down)) {
-        self.position.y += self.speed;
-    }
-    if (rl.isKeyDown(.key_a) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_left)) {
-        self.position.x -= self.speed;
-    }
-    if (rl.isKeyDown(.key_d) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_right)) {
-        self.position.x += self.speed;
-    }
-
     // limit the player's position to the field
     var bounds = self.calculateBounds();
 

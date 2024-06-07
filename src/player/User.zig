@@ -55,6 +55,25 @@ fn centerCamera(self: *Self) void {
 
 /// Updates the camera to follow the player.
 pub fn update(self: *Self) void {
+    // update the player's speed based on input
+    self.player.speed = if (rl.isKeyDown(.key_left_shift) or rl.isGamepadButtonDown(0, .gamepad_button_right_trigger_2))
+        rlm.lerp(self.player.speed, Player.MaxSpeed, Player.Acceleration)
+    else
+        rlm.lerp(self.player.speed, Player.BaseSpeed, Player.Acceleration);
+
+    // move the player based on input
+    if (rl.isKeyDown(.key_w) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_up)) {
+        self.player.position.y -= self.player.speed;
+    }
+    if (rl.isKeyDown(.key_s) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_down)) {
+        self.player.position.y += self.player.speed;
+    }
+    if (rl.isKeyDown(.key_a) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_left)) {
+        self.player.position.x -= self.player.speed;
+    }
+    if (rl.isKeyDown(.key_d) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_right)) {
+        self.player.position.x += self.player.speed;
+    }
     // center the camera on the screen
     self.centerCamera();
     // interpolate the camera target towards the player's position
