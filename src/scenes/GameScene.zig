@@ -14,14 +14,12 @@ const Self = @This();
 
 const QuarterLength = 60 * 5;
 
-/// The team that is hosting the game.
-home_team: Team,
-/// The home team's current state in the game.
-home_team_state: Team.State,
-/// The team that is visiting the game.
-away_team: Team,
-/// The away team's current state in the game.
-away_team_state: Team.State,
+/// The allocator to use for this scene.
+allocator: std.mem.Allocator,
+/// The teams that are playing in the game.
+teams: [2]Team,
+/// The team states for the teams that are playing in the game.
+team_states: [2]Team.State,
 /// The current quarter of the game.
 quarter: u8 = 1,
 /// The time remaining in the current quarter.
@@ -32,10 +30,8 @@ playclock: u8 = 40,
 current_down: u8 = 1,
 /// How many yards the team has to go to get a first down.
 yards_to_go: u8 = 10,
-/// The player that is currently playing.
+/// The user that is currently playing.
 user: User,
-/// A small player struct that is used for testing.
-test_player: Player,
 /// The field that the player is playing on.
 field: Field,
 /// The scorebug for the game.
@@ -44,61 +40,69 @@ scorebug: Scorebug,
 tick_task: ?utils.Task(Self) = null,
 
 /// Initializes a new instance of the game scene.
-pub fn init(player_pos: rl.Vector2, home_team: Team, away_team: Team) Self {
-    var self = Self{
-        .home_team = home_team,
-        .home_team_state = Team.State{ .site = .home },
-        .away_team = away_team,
-        .away_team_state = Team.State{ .site = .away },
-        // initialize the User as undefined until we have a valid pointer
-        .user = undefined,
-        .test_player = undefined,
+pub fn init(allocator: std.mem.Allocator, home_team: Team, away_team: Team) Self {
+    return Self{
+        .allocator = allocator,
+        .teams = [_]Team{ home_team, away_team },
+        .team_states = [_]Team.State{ .{ .site = .home }, .{ .site = .away } },
+        // initialize the User as undefined until we set up a valid player
+        .user = User.init(GameState.Scale),
         .field = Field.init(GameState.Scale, home_team),
         .scorebug = Scorebug.init(home_team, away_team),
         .tick_task = null,
     };
-    self.test_player = Player.init(player_pos, home_team, self.home_team_state, Player.SkinColor.white_1);
-    return self;
 }
 
 /// Starts the tick task for the game scene.
 pub fn setup(self: *Self) !void {
-    self.user = User.init(&self.test_player, GameState.Scale);
+    for (&self.team_states, self.teams) |*team_state, team| {
+        inline for (0..Team.MaxPlayers) |i| {
+            team_state.setPlayer(i, Player.init(
+                randomPosition(),
+                team,
+                team_state.*,
+                Player.SkinColor.random(),
+            ));
+        }
+    }
+
+    try self.user.setSelectedPlayer(self, 0, 0);
     self.tick_task = utils.Task(Self).init(1, tick, self);
 }
 
 /// Deinitializes the game scene.
 pub fn deinit(self: *Self) void {
     self.field.deinit();
-    self.test_player.deinit();
     self.scorebug.deinit();
 }
 
 /// Updates the game scene.
 pub fn update(self: *Self) !void {
     self.field.update();
-    self.test_player.update();
     self.scorebug.update();
-    self.user.update();
+    try self.user.update(self);
 
-    // T-key or Y-button to generate new teams
-    if (rl.isKeyPressed(.key_t) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_up)) {
-        self.setHomeTeam(Team.random());
-        self.setAwayTeam(Team.random());
+    inline for (&self.team_states) |*team_state| {
+        team_state.*.update();
     }
 
-    // Y-key or A-button to switch the game site
-    if (rl.isKeyPressed(.key_y) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_down)) {
-        self.setSite(if (self.home_team_state.site == .home) .away else .home);
+    if (rl.isKeyPressed(.key_one)) {
+        self.setTeam(0, Team.random());
+    } else if (rl.isKeyPressed(.key_two)) {
+        self.setTeam(1, Team.random());
     }
 
-    // R-key or B-button to switch the player's team
-    if (rl.isKeyPressed(.key_r) or rl.isGamepadButtonPressed(0, .gamepad_button_right_face_right)) {
-        if (std.mem.eql(u8, self.test_player.team.name, self.home_team.name)) {
-            self.test_player.setTeam(self.away_team, self.away_team_state);
-        } else {
-            self.test_player.setTeam(self.home_team, self.home_team_state);
+    // switch home and away teams
+    if (rl.isKeyPressed(.key_y)) {
+        for (&self.team_states) |*team_state| {
+            team_state.site = if (team_state.site == .home) .away else .home;
         }
+        self.updateTeams();
+    }
+
+    if (rl.isKeyPressed(.key_g)) {
+        const player_data = self.user.player_data.?;
+        try self.user.setSelectedPlayer(self, player_data.team_index, (player_data.player_index + 1) % 11);
     }
 
     try self.tick_task.?.tick();
@@ -128,35 +132,54 @@ pub fn drawWorld(self: *Self) void {
     defer self.user.endCamera();
 
     self.field.draw();
-    self.test_player.draw();
+
+    inline for (&self.team_states) |*team_state| {
+        team_state.*.draw();
+    }
 }
 
-/// Sets the home team of the game.
-pub fn setHomeTeam(self: *Self, team: Team) void {
-    self.home_team = team;
-    self.home_team_state.site = .home;
-    self.test_player.setTeam(team, self.home_team_state);
-    self.scorebug.setHomeTeam(team);
-    self.field.setTeam(team);
+pub fn updateTeams(self: *Self) void {
+    for (&self.team_states, self.teams) |*team_state, team| {
+        if (team_state.site == .home) {
+            self.field.setTeam(team);
+            self.scorebug.setHomeTeam(team);
+        } else {
+            self.scorebug.setAwayTeam(team);
+        }
+
+        for (&team_state.players) |*player| {
+            if (player.* == null) continue;
+            player.*.?.setTeam(team, team_state.*);
+        }
+    }
 }
 
-/// Sets the away team of the game.
-pub fn setAwayTeam(self: *Self, team: Team) void {
-    self.away_team = team;
-    self.away_team_state.site = .away;
-    self.scorebug.setAwayTeam(team);
+/// Gets the team at the given index.
+pub inline fn getTeam(self: *Self, team_index: usize) Team {
+    return self.teams[team_index];
 }
 
-/// Sets the site of the game.
-pub fn setSite(self: *Self, site: Team.GameSite) void {
-    const home_team = self.home_team;
-    const away_team = self.away_team;
+/// Sets the team at the given index.
+pub inline fn setTeam(self: *Self, team_index: usize, team: Team) void {
+    self.teams[team_index] = team;
+    self.updateTeams();
+}
 
-    self.setHomeTeam(if (site == .home) home_team else away_team);
-    self.setAwayTeam(if (site == .home) away_team else home_team);
+/// Returns the team state for the given team index
+pub fn getTeamState(self: *Self, team_index: usize) !*Team.State {
+    if (team_index < 0 or team_index >= self.team_states.len) return error.OutOfBounds;
+    return &(self.team_states[team_index]);
 }
 
 /// Returns an instance of the scene
 pub fn scene(self: *Self) Scene {
     return Scene.init(self);
+}
+
+/// Returns a random position on the field
+inline fn randomPosition() rl.Vector2 {
+    return .{
+        .x = @floatFromInt(rl.getRandomValue(GameState.FieldWidth / 8, GameState.FieldWidth - GameState.FieldWidth / 8)),
+        .y = @floatFromInt(rl.getRandomValue(GameState.FieldHeight / 8, GameState.FieldHeight - GameState.FieldHeight / 8)),
+    };
 }

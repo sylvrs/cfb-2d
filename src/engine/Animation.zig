@@ -4,6 +4,9 @@ const utils = @import("../utils.zig");
 
 const Self = @This();
 
+/// The possible orientations of the animation.
+pub const Orientation = enum { original, flipped_x, flipped_y, flipped_xy };
+
 /// The texture to animate.
 texture: rl.Texture,
 /// How much time should pass before the next frame.
@@ -57,13 +60,15 @@ pub fn update(self: *Self) void {
 }
 
 /// Draws the animation at the given position.
-pub fn draw(self: *Self, position: rl.Vector2) void {
+pub fn draw(self: *Self, position: rl.Vector2, orientation: Orientation) void {
+    const flip_x: f32 = if (orientation == .flipped_x or orientation == .flipped_xy) -1.0 else 1.0;
+    const flip_y: f32 = if (orientation == .flipped_y or orientation == .flipped_xy) -1.0 else 1.0;
     self.texture.drawPro(
         .{
             .x = @floatFromInt(self.current_frame * self.frame_width),
             .y = 0,
-            .width = @floatFromInt(self.frame_width),
-            .height = @floatFromInt(self.texture.height),
+            .width = @as(f32, @floatFromInt(self.frame_width)) * flip_x,
+            .height = @as(f32, @floatFromInt(self.texture.height)) * flip_y,
         },
         .{
             .x = position.x,

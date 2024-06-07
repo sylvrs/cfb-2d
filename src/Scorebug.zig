@@ -140,7 +140,7 @@ inline fn drawClock(self: *Self, game: *GameScene) !void {
 }
 
 /// Draws the score for the given team at the given x offset.
-inline fn drawScore(self: *Self, team_state: Team.State, alignment: Alignment) !void {
+inline fn drawScore(self: *Self, team_state: *Team.State, alignment: Alignment) !void {
     const width_diff: i32 = @intFromFloat(Offset * scaleByType(f32, self.texture.height));
 
     try utils.drawFmtText(
@@ -229,14 +229,14 @@ inline fn midpointWidth() i32 {
 
 /// Draws the home team's HUD elements.
 inline fn drawHomeHud(self: *Self, game: *GameScene) !void {
-    try self.drawScore(game.home_team_state, .left);
-    try self.drawTeamName(game.home_team, .right);
+    try self.drawScore(try game.getTeamState(0), .left);
+    try self.drawTeamName(game.getTeam(0), .right);
 }
 
 /// Draws the away team's HUD elements.
 inline fn drawAwayHud(self: *Self, game: *GameScene) !void {
-    try self.drawScore(game.away_team_state, .right);
-    try self.drawTeamName(game.away_team, .left);
+    try self.drawScore(try game.getTeamState(1), .right);
+    try self.drawTeamName(game.getTeam(1), .left);
 }
 
 /// Sets the home team of the scorebug.

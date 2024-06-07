@@ -93,12 +93,11 @@ pub fn setScene(self: *Self, scene: SceneState) !void {
         .main_menu => try self.setupScene(MainMenuScene.init(self.allocator, self)),
         .exhibition => try self.setupScene(ExhibitionScene.init(self.allocator)),
         .game => try self.setupScene(GameScene.init(
-            rl.Vector2{
-                .x = @divExact(FieldWidth, Scale),
-                .y = @divExact(FieldHeight, Scale),
-            },
+            self.allocator,
             Team.random(),
             Team.random(),
+            // try Team.find("West Virginia State"),
+            // try Team.find("West Virginia"),
         )),
         .options => try self.setupScene(OptionsScene.init(self.allocator, self)),
     }
