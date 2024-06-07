@@ -16,6 +16,8 @@ This game is still extremely early in development but has plans for the followin
 - [ ] Dynasty
 
 ### Team
+- [x] FBS & FCS
+- [ ] Div II, Div III, and NJCAA
 - [ ] Customizable Uniforms
 - [ ] Team Builder
 
