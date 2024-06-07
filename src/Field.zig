@@ -11,7 +11,8 @@ const EndzoneText = struct {
         .{ .x = 70, .y = GameState.FieldHeight / 2, .rotation = 270 },
         .{ .x = GameState.FieldWidth - 70, .y = GameState.FieldHeight / 2, .rotation = 90 },
     };
-    const BaseScale = 64;
+    // The height of the endzone text
+    const Height = 60;
     const BaseSpacing = 96;
     const BrightnessFactor = 0.75;
 };
@@ -38,10 +39,10 @@ pub fn init(scale: f32, home_team: Team) Self {
         .base_texture = rl.loadTexture("assets/field_base.png"),
         .markers_texture = rl.loadTexture("assets/field_markers.png"),
         .endzones_texture = rl.loadTexture("assets/field_endzones.png"),
-        .base_tint = BaseTint,
+        .base_tint = if (home_team.field_color) |color| color else BaseTint,
+        .endzones_tint = if (home_team.endzone_color) |color| color else home_team.primary_color,
         .endzone_text = rl.textToUpper(home_team.name),
         // randomize the endzone tint
-        .endzones_tint = home_team.primary_color,
         .scale = scale,
     };
 }
@@ -59,7 +60,7 @@ pub fn setScale(self: *Self, scale: f32) void {
 
 /// Sets the team of the field
 pub fn setTeam(self: *Self, team: Team) void {
-    self.endzones_tint = team.primary_color;
+    self.endzones_tint = if (team.endzone_color) |color| color else team.primary_color;
     self.base_tint = if (team.field_color) |color| color else BaseTint;
     self.endzone_text = team.name;
 }
@@ -87,7 +88,8 @@ pub fn drawEndzones(self: Self) void {
             rl.Vector2.init(bound.x, bound.y),
             rl.Vector2.init(0, 0),
             bound.rotation,
-            EndzoneText.BaseScale,
+            // make the text 75% of the height of the endzone
+            EndzoneText.Height * 0.85,
             EndzoneText.BaseSpacing / @as(f32, @floatFromInt(self.endzone_text.len)),
             self.endzones_tint.brightness(EndzoneText.BrightnessFactor),
         );
