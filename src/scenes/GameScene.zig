@@ -158,6 +158,16 @@ pub inline fn getTeam(self: *Self, team_index: usize) Team {
     return self.teams[team_index];
 }
 
+/// Gets the home team based on the team site
+pub inline fn getHomeTeam(self: *Self) Team {
+    return if (self.team_states[0].site == .home) self.teams[0] else self.teams[1];
+}
+
+/// Gets the away team based on the team site
+pub inline fn getAwayTeam(self: *Self) Team {
+    return if (self.team_states[1].site == .away) self.teams[1] else self.teams[0];
+}
+
 /// Sets the team at the given index.
 pub inline fn setTeam(self: *Self, team_index: usize, team: Team) void {
     self.teams[team_index] = team;
