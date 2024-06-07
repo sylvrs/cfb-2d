@@ -11,9 +11,9 @@ const Self = @This();
 
 const PlayerScale = 2;
 
-const BaseSpeed = 1.5;
-const MaxSpeed = BaseSpeed * 1.5;
-const Acceleration = 0.5;
+pub const BaseSpeed = 1.5;
+pub const MaxSpeed = BaseSpeed * 1.5;
+pub const Acceleration = 0.5;
 
 pub const SkinColor = enum {
     const Map = std.ComptimeStringMap(rl.Color, .{
