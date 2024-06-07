@@ -15,9 +15,9 @@ const Self = @This();
 /// The scale factor to use for the game.
 pub const Scale = 2;
 /// The starting width of the window (predefined as the size of the field by the scale factor)
-pub const FieldWidth = 720 * Scale;
+pub const FieldWidth = 730 * Scale;
 /// The starting height of the window. (predefined as the size of the field by the scale factor)
-pub const FieldHeight = 320 * Scale;
+pub const FieldHeight = 330 * Scale;
 /// The title of the window.
 pub const Title = "College Ball";
 /// The period, in seconds, between each update of the window title.

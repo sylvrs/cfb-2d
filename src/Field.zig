@@ -41,7 +41,7 @@ pub fn init(scale: f32, home_team: Team) Self {
         .endzones_texture = rl.loadTexture("assets/field_endzones.png"),
         .base_tint = if (home_team.field_color) |color| color else BaseTint,
         .endzones_tint = if (home_team.endzone_color) |color| color else home_team.primary_color,
-        .endzone_text = rl.textToUpper(home_team.name),
+        .endzone_text = home_team.name,
         // randomize the endzone tint
         .scale = scale,
     };
