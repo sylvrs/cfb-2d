@@ -86,7 +86,7 @@ pub fn drawEndzones(self: Self) void {
             rl.getFontDefault(),
             rl.textToUpper(self.endzone_text),
             rl.Vector2.init(bound.x, bound.y),
-            rl.Vector2.init(0, 0),
+            rl.Vector2.zero(),
             bound.rotation,
             // make the text 75% of the height of the endzone
             EndzoneText.Height * 0.85,

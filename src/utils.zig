@@ -93,7 +93,7 @@ pub fn drawScaledTexture(texture: rl.Texture2D, pos_x: f32, pos_y: f32, scale: f
         texture,
         .{ .x = 0, .y = 0, .width = cIntToFloat(texture.width), .height = cIntToFloat(texture.height) },
         .{ .x = pos_x, .y = pos_y, .width = cIntToFloat(texture.width) * scale, .height = cIntToFloat(texture.height) * scale },
-        .{ .x = 0, .y = 0 },
+        rl.Vector2.zero(),
         0.0,
         tint,
     );
@@ -105,7 +105,7 @@ pub fn drawCenteredScaledTexture(texture: rl.Texture2D, pos_x: f32, pos_y: f32, 
         texture,
         .{ .x = 0, .y = 0, .width = cIntToFloat(texture.width), .height = cIntToFloat(texture.height) },
         .{ .x = pos_x - cIntToFloat(texture.width) * scale / 2, .y = pos_y - cIntToFloat(texture.height) * scale / 2, .width = cIntToFloat(texture.width) * scale, .height = cIntToFloat(texture.height) * scale },
-        .{ .x = 0, .y = 0 },
+        rl.Vector2.zero(),
         0.0,
         tint,
     );
