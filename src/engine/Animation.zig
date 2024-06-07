@@ -8,7 +8,7 @@ const Self = @This();
 pub const Orientation = enum { original, flipped_x, flipped_y, flipped_xy };
 
 /// The texture to animate.
-texture: rl.Texture,
+texture: rl.Texture2D,
 /// How much time should pass before the next frame.
 animation_time: f32,
 /// The current frame of the animation.
@@ -23,7 +23,7 @@ total_frames: usize,
 scale: f32 = 1.0,
 
 /// Creates a new animation.
-pub fn init(texture: rl.Texture, animation_speed: f32, frame_width: usize, scale: f32) Self {
+pub fn init(texture: rl.Texture2D, animation_speed: f32, frame_width: usize, scale: f32) Self {
     return Self{
         .texture = texture,
         .animation_time = 1.0 / animation_speed,

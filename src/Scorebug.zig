@@ -21,7 +21,7 @@ const ReplaceMap = std.StaticStringMap(rl.Color).initComptime(.{
 
 home_team: Team,
 away_team: Team,
-texture: rl.Texture,
+texture: rl.Texture2D,
 
 pub fn init(home_team: Team, away_team: Team) Self {
     return Self{
@@ -256,7 +256,7 @@ pub fn setAwayTeam(self: *Self, team: Team) void {
 var scorebug_image: ?rl.Image = null;
 
 /// Creates a new scorebug texture with the given teams.
-fn createReplacedTexture(home_team: Team, away_team: Team) rl.Texture {
+fn createReplacedTexture(home_team: Team, away_team: Team) rl.Texture2D {
     if (scorebug_image == null) {
         scorebug_image = rl.loadImage("assets/scorebug.png");
     }
