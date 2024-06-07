@@ -5,7 +5,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "iguaball",
+        .name = "cfb-2d",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
@@ -17,13 +17,9 @@ pub fn build(b: *std.Build) void {
     });
 
     const raylib = raylib_dep.module("raylib"); // main raylib module
-    const raylib_math = raylib_dep.module("raylib-math"); // raymath module
-    const rlgl = raylib_dep.module("rlgl"); // rlgl module
     const raylib_artifact = raylib_dep.artifact("raylib"); // raylib C library
     exe.linkLibrary(raylib_artifact);
     exe.root_module.addImport("raylib", raylib);
-    exe.root_module.addImport("raylib-math", raylib_math);
-    exe.root_module.addImport("rlgl", rlgl);
 
     b.installArtifact(exe);
 

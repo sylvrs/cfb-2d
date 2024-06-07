@@ -1,6 +1,5 @@
 const std = @import("std");
 const rl = @import("raylib");
-const rlm = @import("raylib-math");
 const utils = @import("../utils.zig");
 const Field = @import("../Field.zig");
 const Player = @import("../player/Player.zig");

@@ -12,11 +12,11 @@ const GameState = @import("GameState.zig");
 
 pub fn main() anyerror!void {
     const allocator = std.heap.page_allocator;
-    rl.setConfigFlags(.flag_vsync_hint);
+    rl.setConfigFlags(.{ .vsync_hint = true });
     rl.setExitKey(.key_null);
     rl.initWindow(GameState.FieldWidth, GameState.FieldHeight, GameState.Title);
     defer rl.closeWindow();
-    rl.setWindowState(.flag_window_resizable);
+    rl.setWindowState(.{ .window_resizable = true });
 
     var state = GameState.init(allocator);
     defer state.deinit();

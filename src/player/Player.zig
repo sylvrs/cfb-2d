@@ -1,6 +1,5 @@
 const std = @import("std");
 const rl = @import("raylib");
-const rlm = @import("raylib-math");
 const utils = @import("../utils.zig");
 const GameState = @import("../GameState.zig");
 const Animation = @import("../engine/Animation.zig");
@@ -16,7 +15,7 @@ pub const MaxSpeed = BaseSpeed * 1.5;
 pub const Acceleration = 0.5;
 
 pub const SkinColor = enum {
-    const Map = std.ComptimeStringMap(rl.Color, .{
+    const Map = std.StaticStringMap(rl.Color).initComptime(.{
         .{ "white_1", rl.Color.init(255, 231, 209, 255) },
         .{ "black_1", rl.Color.init(59, 34, 25, 255) },
     });
@@ -36,7 +35,7 @@ pub const SkinColor = enum {
 };
 
 /// A map of field names to colors for color replacement.
-const ColorReplacementMap = std.ComptimeStringMap(rl.Color, .{
+const ColorReplacementMap = std.StaticStringMap(rl.Color).initComptime(.{
     .{ "primary_color", rl.Color.init(82, 82, 82, 255) },
     .{ "secondary_color", rl.Color.init(167, 167, 167, 255) },
     .{ "skin_color", rl.Color.white },
@@ -103,8 +102,8 @@ pub fn update(self: *Self) void {
     var bounds = self.calculateBounds();
 
     // clamp the bounds to the field
-    bounds.x = rlm.clamp(bounds.x, 0, GameState.FieldWidth - bounds.width);
-    bounds.y = rlm.clamp(bounds.y, 0, GameState.FieldHeight - bounds.height);
+    bounds.x = rl.math.clamp(bounds.x, 0, GameState.FieldWidth - bounds.width);
+    bounds.y = rl.math.clamp(bounds.y, 0, GameState.FieldHeight - bounds.height);
 
     // set the position based on the bounds & hitbox
     self.position.x = bounds.x - @as(f32, @floatFromInt(self.hitbox.width * PlayerScale)) / 2.0;
@@ -140,15 +139,15 @@ fn loadAndShadeTexture(team: Team, team_state: Team.State, skin_color: SkinColor
     defer copied.unload();
 
     const jersey = team.fetchJersey(if (team_state.alternates) .alternate else if (team_state.site == .home) .home else .away);
-    inline for (ColorReplacementMap.kvs) |entry| {
-        const color = if (std.mem.eql(u8, entry.key, "primary_color"))
+    for (ColorReplacementMap.keys(), ColorReplacementMap.values()) |key, value| {
+        const color = if (std.mem.eql(u8, key, "primary_color"))
             jersey.primary_color
-        else if (std.mem.eql(u8, entry.key, "secondary_color"))
+        else if (std.mem.eql(u8, key, "secondary_color"))
             jersey.secondary_color
         else
             skin_color.color();
 
-        copied.replaceColor(entry.value, color);
+        copied.replaceColor(value, color);
     }
 
     return copied.toTexture();

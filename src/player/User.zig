@@ -1,6 +1,5 @@
 const std = @import("std");
 const rl = @import("raylib");
-const rlm = @import("raylib-math");
 
 const GameState = @import("../GameState.zig");
 const GameScene = @import("../scenes/GameScene.zig");
@@ -73,8 +72,8 @@ pub fn update(self: *Self, game: *GameScene) !void {
     try self.updatePlayer(game);
 
     // limit the camera target to the bounds of the screen using the player's calculated bounds
-    self.camera.target.x = rlm.clamp(self.camera.target.x, 0, GameState.FieldWidth);
-    self.camera.target.y = rlm.clamp(self.camera.target.y, 0, GameState.FieldHeight);
+    self.camera.target.x = rl.math.clamp(self.camera.target.x, 0, GameState.FieldWidth);
+    self.camera.target.y = rl.math.clamp(self.camera.target.y, 0, GameState.FieldHeight);
 }
 
 /// Updates the player if one is selected.
@@ -84,9 +83,9 @@ fn updatePlayer(self: *Self, game: *GameScene) !void {
     var player = try team.getNonNullPlayer(data.player_index);
     // update the player's speed based on input
     player.speed = if (rl.isKeyDown(.key_left_shift) or rl.isGamepadButtonDown(0, .gamepad_button_right_trigger_2))
-        rlm.lerp(player.speed, Player.MaxSpeed, Player.Acceleration)
+        rl.math.lerp(player.speed, Player.MaxSpeed, Player.Acceleration)
     else
-        rlm.lerp(player.speed, Player.BaseSpeed, Player.Acceleration);
+        rl.math.lerp(player.speed, Player.BaseSpeed, Player.Acceleration);
 
     // move the player based on input
     if (rl.isKeyDown(.key_w) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_up)) {
@@ -103,5 +102,5 @@ fn updatePlayer(self: *Self, game: *GameScene) !void {
     }
 
     // interpolate the camera target towards the player's position
-    self.camera.target = rlm.vector2Lerp(self.camera.target, player.position, CameraSmoothing);
+    self.camera.target = rl.math.vector2Lerp(self.camera.target, player.position, CameraSmoothing);
 }

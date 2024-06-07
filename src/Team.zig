@@ -134,7 +134,7 @@ jerseys: std.EnumArray(JerseyType, Jersey),
 /// The team's division (holds both division and conference).
 division: Division,
 
-pub const AllTeams = std.ComptimeStringMap(Self, .{
+pub const AllTeams = std.StaticStringMap(Self).initComptime(.{
     // -- FBS
     // BIG 12 teams
     fbsInit("Baylor", "Bears", "BU", .big_12, 0x154734, 0xFFB81C, .{}),
@@ -267,9 +267,9 @@ pub fn find(name: [:0]const u8) !Self {
 
 /// Returns a random team from the `AllTeams` map.
 pub fn random() Self {
-    const index = rl.getRandomValue(0, AllTeams.kvs.len - 1);
-    const entry = AllTeams.kvs[@as(usize, @intCast(index))];
-    return AllTeams.get(entry.key).?;
+    const teams = AllTeams.values();
+    const index = rl.getRandomValue(0, @as(i32, @intCast(teams.len - 1)));
+    return teams[@as(usize, @intCast(index))];
 }
 
 /// Returns the team's jersey based on the `JerseyType`.

@@ -14,7 +14,7 @@ const Offset: f32 = std.math.tan(std.math.degreesToRadians(Angle));
 /// The alignment of the elements.
 const Alignment = enum { left, right };
 
-const ReplaceMap = std.ComptimeStringMap(rl.Color, .{
+const ReplaceMap = std.StaticStringMap(rl.Color).initComptime(.{
     .{ "home_team", rl.Color.init(88, 88, 88, 255) },
     .{ "away_team", rl.Color.init(255, 255, 255, 255) },
 });

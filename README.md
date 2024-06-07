@@ -1,7 +1,7 @@
 # College Football 2D
 
 ## Overview
-College Football 2D is a small American football game built using Zig & Raylib.
+College Football 2D is a small American football game built using Zig (v0.13.0) & Raylib.
 
 This project is meant to be a learning experience while providing a free, open source 2D football experience for PC gamers. This project is heavily inspired by the following:
 * [Retro Bowl](https://x.com/retro_bowl)
