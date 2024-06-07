@@ -131,6 +131,7 @@ pub inline fn calculateBounds(self: *Self) rl.Rectangle {
 var player_image: ?rl.Image = null;
 
 /// Loads the player's texture and shades it based on the team & skin color
+/// TODO: we should keep a texture manager to avoid reloading/copying the same texture multiple times
 fn loadAndShadeTexture(team: Team, team_state: Team.State, skin_color: SkinColor) rl.Texture {
     if (player_image == null) {
         player_image = rl.loadImage("assets/player.png");
