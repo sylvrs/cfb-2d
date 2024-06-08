@@ -229,13 +229,13 @@ inline fn midpointWidth() i32 {
 
 /// Draws the home team's HUD elements.
 inline fn drawHomeHud(self: *Self, game: *GameScene) !void {
-    try self.drawScore(try game.getTeamState(0), .left);
+    try self.drawScore(game.getHomeTeamState(), .left);
     try self.drawTeamName(game.getHomeTeam(), .right);
 }
 
 /// Draws the away team's HUD elements.
 inline fn drawAwayHud(self: *Self, game: *GameScene) !void {
-    try self.drawScore(try game.getTeamState(1), .right);
+    try self.drawScore(game.getAwayTeamState(), .right);
     try self.drawTeamName(game.getAwayTeam(), .left);
 }
 

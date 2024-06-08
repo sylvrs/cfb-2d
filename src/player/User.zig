@@ -9,12 +9,10 @@ const Self = @This();
 
 const CameraSmoothing = 0.15;
 
-const SelectedPlayerData = struct { team_index: usize, player_index: usize };
-
 /// The camera following the user's player.
 camera: rl.Camera2D,
 /// The player being controlled by the user.
-player_data: ?SelectedPlayerData = null,
+player_data: ?Player.IndexData = null,
 
 pub fn init(zoom: f32) Self {
     return Self{
@@ -55,7 +53,7 @@ fn centerCamera(self: *Self) void {
 }
 
 /// Sets the player and teleports the camera to the player.
-pub fn setSelectedPlayer(self: *Self, game: *GameScene, team_index: usize, player_index: usize) !void {
+pub fn setSelectedPlayer(self: *Self, game: *GameScene, team_index: u8, player_index: u8) !void {
     self.player_data = .{ .team_index = team_index, .player_index = player_index };
 
     var team_state = try game.getTeamState(team_index);
@@ -89,16 +87,15 @@ fn updatePlayer(self: *Self, game: *GameScene) !void {
 
     // move the player based on input
     if (rl.isKeyDown(.key_w) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_up)) {
-        player.position.y -= player.speed;
+        player.velocity.y -= Player.BaseSpeed;
+    } else if (rl.isKeyDown(.key_s) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_down)) {
+        player.velocity.y += Player.BaseSpeed;
     }
-    if (rl.isKeyDown(.key_s) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_down)) {
-        player.position.y += player.speed;
-    }
+
     if (rl.isKeyDown(.key_a) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_left)) {
-        player.position.x -= player.speed;
-    }
-    if (rl.isKeyDown(.key_d) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_right)) {
-        player.position.x += player.speed;
+        player.velocity.x -= player.speed;
+    } else if (rl.isKeyDown(.key_d) or rl.isGamepadButtonDown(0, .gamepad_button_left_face_right)) {
+        player.velocity.x += player.speed;
     }
 
     // interpolate the camera target towards the player's position

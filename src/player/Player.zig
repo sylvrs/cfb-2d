@@ -10,9 +10,11 @@ const Self = @This();
 
 const PlayerScale = 2;
 
-pub const BaseSpeed = 1.5;
+pub const BaseSpeed = 2.25;
 pub const MaxSpeed = BaseSpeed * 1.5;
 pub const Acceleration = 0.5;
+
+pub const Drag = 0.75;
 
 pub const SkinColor = enum {
     const Map = std.StaticStringMap(rl.Color).initComptime(.{
@@ -50,8 +52,13 @@ const AnimationType = enum(u8) {
 
 const Facing = enum { left, right };
 
+/// Stores the player's team index and offset in the team.
+pub const IndexData = struct { team_index: u8, player_index: u8 };
+
 /// The player's position.
 position: rl.Vector2,
+/// The player's velocity.
+velocity: rl.Vector2 = .{ .x = 0, .y = 0 },
 /// The player's hitbox.
 hitbox: Hitbox,
 /// The player's speed.
@@ -105,9 +112,19 @@ pub fn update(self: *Self) void {
     bounds.x = rl.math.clamp(bounds.x, 0, GameState.FieldWidth - bounds.width);
     bounds.y = rl.math.clamp(bounds.y, 0, GameState.FieldHeight - bounds.height);
 
+    // update the player's velocity based on input
+    self.velocity = self.velocity.clampValue(0, self.speed);
+
+    self.position = self.velocity.add(self.position);
+    self.velocity = self.velocity.scale(Drag);
+
     // set the position based on the bounds & hitbox
-    self.position.x = bounds.x - @as(f32, @floatFromInt(self.hitbox.width * PlayerScale)) / 2.0;
-    self.position.y = bounds.y - @as(f32, @floatFromInt(self.hitbox.height * PlayerScale)) / 2.0;
+    // self.position.x = bounds.x - @as(f32, @floatFromInt(self.hitbox.width * PlayerScale)) / 2.0;
+    // self.position.y = bounds.y - @as(f32, @floatFromInt(self.hitbox.height * PlayerScale)) / 2.0;
+
+    // clamp the position based on the hitbox bounds
+    self.position.x = rl.math.clamp(self.position.x, 0, GameState.FieldWidth - @as(f32, @floatFromInt(self.hitbox.width * PlayerScale)));
+    self.position.y = rl.math.clamp(self.position.y, 0, GameState.FieldHeight - @as(f32, @floatFromInt(self.hitbox.height * PlayerScale)));
 
     self.animation.update();
 }

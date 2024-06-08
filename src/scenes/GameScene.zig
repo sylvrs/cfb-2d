@@ -13,6 +13,11 @@ const Self = @This();
 
 const QuarterLength = 60 * 5;
 
+const EndzoneBounds = struct {
+    const Away = rl.Rectangle{ .x = 5 * GameState.Scale, .y = 5 * GameState.Scale, .width = 60 * GameState.Scale, .height = 320 * GameState.Scale };
+    const Home = rl.Rectangle{ .x = 665 * GameState.Scale, .y = 5 * GameState.Scale, .width = 60 * GameState.Scale, .height = 320 * GameState.Scale };
+};
+
 /// The allocator to use for this scene.
 allocator: std.mem.Allocator,
 /// The teams that are playing in the game.
@@ -37,6 +42,8 @@ field: Field,
 scorebug: Scorebug,
 /// The task that is responsible for ticking the game.
 tick_task: ?utils.Task(Self) = null,
+/// The player that is currently carrying the ball (if any).
+ballcarrier_data: ?Player.IndexData = null,
 
 /// Initializes a new instance of the game scene.
 pub fn init(allocator: std.mem.Allocator, home_team: Team, away_team: Team) Self {
@@ -66,6 +73,12 @@ pub fn setup(self: *Self) !void {
     }
 
     try self.user.setSelectedPlayer(self, 0, 0);
+    const player = self.getUserPlayer().?;
+    const team_state = if (std.mem.eql(u8, player.team.name, self.teams[0].name)) &self.team_states[0] else &self.team_states[1];
+    const new_bounds = if (team_state.site == .home) EndzoneBounds.Away else EndzoneBounds.Home;
+    player.position = rl.Vector2.init(new_bounds.x + @divFloor(new_bounds.width, 2), new_bounds.y + @divFloor(new_bounds.height, 2));
+
+    try self.setBallcarrier(0, 0);
     self.tick_task = utils.Task(Self).init(1, tick, self);
 }
 
@@ -101,7 +114,55 @@ pub fn update(self: *Self) !void {
 
     if (rl.isKeyPressed(.key_g)) {
         const player_data = self.user.player_data.?;
-        try self.user.setSelectedPlayer(self, player_data.team_index, (player_data.player_index + 1) % 11);
+        const new_player_index = (player_data.player_index + 1) % 11;
+        try self.user.setSelectedPlayer(self, player_data.team_index, new_player_index);
+        try self.setBallcarrier(player_data.team_index, new_player_index);
+    }
+
+    if (self.ballcarrier_data) |data| {
+        const team_state = try self.getTeamState(data.team_index);
+        const player = try team_state.getNonNullPlayer(data.player_index);
+
+        const rect = rl.Rectangle.init(
+            player.position.x,
+            player.position.y,
+            @as(f32, @floatFromInt(player.hitbox.width)),
+            @as(f32, @floatFromInt(player.hitbox.height)),
+        );
+
+        // check if the player is in the endzone for their team
+        const endzone_bounds: rl.Rectangle = switch (team_state.site) {
+            .home => EndzoneBounds.Home,
+            .away => EndzoneBounds.Away,
+        };
+
+        if (rect.checkCollision(endzone_bounds)) {
+            // touchdown
+            team_state.score += 6;
+
+            // teleport to other side of field
+            const new_bounds = if (team_state.site == .home) EndzoneBounds.Away else EndzoneBounds.Home;
+            player.position = rl.Vector2.init(new_bounds.x + @divFloor(new_bounds.width, 2), new_bounds.y + @divFloor(new_bounds.height, 2));
+        }
+
+        const other_team_state = try self.getTeamState((data.player_index + 1) % 2);
+        for (0..Team.MaxPlayers) |index| {
+            var current_player = &(other_team_state.players[index] orelse continue);
+
+            // run towards player
+            const distance = current_player.position.distance(player.position);
+
+            const breakpoint = @as(f32, @floatFromInt(player.hitbox.width)) * GameState.Scale;
+            if (distance <= breakpoint) {
+                // teleport to other side of field
+                const new_bounds = if (team_state.site == .home) EndzoneBounds.Away else EndzoneBounds.Home;
+                player.position = rl.Vector2.init(new_bounds.x + @divFloor(new_bounds.width, 2), new_bounds.y + @divFloor(new_bounds.height, 2));
+            } else if (distance < breakpoint * 5.0) {
+                const direction = player.position.subtract(current_player.position).normalize();
+                // set velocity
+                current_player.velocity = direction.scale(current_player.speed);
+            }
+        }
     }
 
     try self.tick_task.?.tick();
@@ -119,9 +180,16 @@ pub fn tick(self: *Self) !void {
     // if (self.playclock == 0) { }
 }
 
+pub fn getUserPlayer(self: *Self) ?*Player {
+    const player_data = self.user.player_data orelse return null;
+    const team_state = self.getTeamState(player_data.team_index) catch return null;
+    return team_state.getNonNullPlayer(player_data.player_index) catch null;
+}
+
 /// Draws the game scene.
 pub fn draw(self: *Self) !void {
     self.drawWorld();
+
     try self.scorebug.draw(self);
 }
 
@@ -163,9 +231,19 @@ pub inline fn getHomeTeam(self: *Self) Team {
     return if (self.team_states[0].site == .home) self.teams[0] else self.teams[1];
 }
 
+/// Gets the home team state based on the team site
+pub inline fn getHomeTeamState(self: *Self) *Team.State {
+    return &(if (self.team_states[0].site == .home) self.team_states[0] else self.team_states[1]);
+}
+
 /// Gets the away team based on the team site
 pub inline fn getAwayTeam(self: *Self) Team {
     return if (self.team_states[1].site == .away) self.teams[1] else self.teams[0];
+}
+
+/// Gets the away team state based on the team site
+pub inline fn getAwayTeamState(self: *Self) *Team.State {
+    return &(if (self.team_states[1].site == .away) self.team_states[1] else self.team_states[0]);
 }
 
 /// Sets the team at the given index.
@@ -178,6 +256,20 @@ pub inline fn setTeam(self: *Self, team_index: usize, team: Team) void {
 pub fn getTeamState(self: *Self, team_index: usize) !*Team.State {
     if (team_index < 0 or team_index >= self.team_states.len) return error.OutOfBounds;
     return &(self.team_states[team_index]);
+}
+
+/// Sets the ballcarrier based on the team and player index.
+pub fn setBallcarrier(self: *Self, team_index: u8, player_index: u8) !void {
+    if (team_index < 0 or team_index >= self.team_states.len) return error.InvalidTeamIndex;
+    if (player_index < 0 or player_index >= Team.MaxPlayers) return error.InvalidPlayerIndex;
+    if (self.team_states[team_index].players[player_index] == null) return error.UnknownPlayer;
+
+    self.ballcarrier_data = .{ .team_index = team_index, .player_index = player_index };
+}
+
+/// Clears the ballcarrier data from the game scene.
+pub fn clearBallcarrier(self: *Self) void {
+    self.ballcarrier_data = null;
 }
 
 /// Returns an instance of the scene
